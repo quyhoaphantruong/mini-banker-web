@@ -1,0 +1,60 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+    id-token: write
+    contents: read
+
+concurrency:
+    group: deploy-dev
+    cancel-in-progress: false
+
+env:
+    AWS_REGION: ap-southeast-2
+    TF_DIR: infra/envs/dev
+
+jobs:
+    deploy:
+      if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+      runs-on: ubuntu-latest
+      environment: dev
+      timeout-minutes: 45
+      steps:
+        - uses: actions/checkout@v4
+          with: 
+            ref: ${{ github.event.workflow_run.head_sha }}
+        - uses: actions/setup-node@v4
+          with:
+            node-version: 22
+            cache: npm
+        - uses: aws-actions/configure-aws-credentials@v4
+          with: 
+            role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+            aws-region: ${{ env.AWS_REGION }}
+        - uses: hashicorp/setup-terraform@v3
+          with: 
+            terraform_wrapper: false
+        - run: npm ci
+        - name: Terraform Init
+          run: terraform init
+          working-directory: ${{ env.TF_DIR }}
+        - name: Terraform plan
+          run: terraform plan -input=false -out=tfplan
+          working-directory: ${{ env.TF_DIR }}
+        - name: Terraform Apply
+          run: terraform apply -auto-approve
+          working-directory: ${{ env.TF_DIR }}
+        - name: Publish frontend and invalidate CloudFront
+          working-directory: ${{ env.TF_DIR }}
+          run: |
+            bucket=$(terraform output -raw site_bucket)
+            distribution=$(terraform output -raw distribution_id)
+            # Terraform owns config.json, so --delete must not remove it
+            aws s3 sync "$GITHUB_WORKSPACE/frontend/dist" "s3://${bucket}" --delete --exclude config.json
+            aws cloudfront create-invalidation --distribution-id "$distribution" --paths "/*"
+          
