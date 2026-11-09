@@ -1,0 +1,200 @@
+variable "name_prefix" {
+  type = string
+}
+
+variable "github_repository" {
+  type        = string
+  description = "owner/repo allowed to assume the deploy role."
+}
+
+variable "branch" {
+  type    = string
+  default = "main"
+}
+
+variable "create_oidc_provider" {
+  type        = bool
+  default     = true
+  description = "The provider is one per account. Set false when it already exists."
+}
+
+variable "state_bucket_arn" {
+  type = string
+}
+
+variable "lock_table_arn" {
+  type = string
+}
+
+variable "site_bucket_arn" {
+  type = string
+}
+
+variable "distribution_arn" {
+  type = string
+}
+
+variable "lambda_function_arns" {
+  type = list(string)
+}
+
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+locals {
+  account_id = data.aws_caller_identity.current.account_id
+  region     = data.aws_region.current.name
+  oidc_url   = "token.actions.githubusercontent.com"
+}
+
+resource "aws_iam_openid_connect_provider" "github" {
+  count           = var.create_oidc_provider ? 1 : 0
+  url             = "https://${local.oidc_url}"
+  client_id_list = ["sts.amazonaws.com"]
+}
+
+data "aws_iam_openid_connect_provider" "existing" {
+  count = var.create_oidc_provider ? 0 : 1
+  url   = "https://${local.oidc_url}"
+}
+
+locals {
+  provider_arn = var.create_oidc_provider ? aws_iam_openid_connect_provider.github[0].arn : data.aws_iam_openid_connect_provider.existing[0].arn
+}
+
+data "aws_iam_policy_document" "trust" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [local.provider_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.oidc_url}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "${local.oidc_url}:sub"
+      values   = ["repo:${var.github_repository}:ref:refs/heads/${var.branch}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "deploy" {
+  name                 = "${var.name_prefix}-github-deploy"
+  assume_role_policy   = data.aws_iam_policy_document.trust.json
+  max_session_duration = 3600
+}
+
+data "aws_iam_policy_document" "deploy" {
+  statement {
+    sid       = "TerraformStateObjects"
+    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    resources = ["${var.state_bucket_arn}/*"]
+  }
+
+  statement {
+    sid       = "TerraformStateBucket"
+    actions   = ["s3:ListBucket", "s3:GetBucketVersioning"]
+    resources = [var.state_bucket_arn]
+  }
+
+  statement {
+    sid       = "TerraformStateLock"
+    actions   = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem", "dynamodb:DescribeTable"]
+    resources = [var.lock_table_arn]
+  }
+
+  statement {
+    sid       = "SiteBucketObjects"
+    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    resources = ["${var.site_bucket_arn}/*"]
+  }
+
+  statement {
+    sid       = "SiteBucketManage"
+    actions   = ["s3:ListBucket", "s3:Get*", "s3:PutBucketPolicy", "s3:PutBucketPublicAccessBlock", "s3:PutEncryptionConfiguration"]
+    resources = [var.site_bucket_arn]
+  }
+
+  statement {
+    sid       = "InvalidateSiteCache"
+    actions   = ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation", "cloudfront:GetDistribution", "cloudfront:UpdateDistribution"]
+    resources = [var.distribution_arn]
+  }
+
+  statement {
+    sid       = "UpdateLambdaCode"
+    actions   = ["lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration", "lambda:GetFunction", "lambda:GetFunctionConfiguration"]
+    resources = var.lambda_function_arns
+  }
+
+  statement {
+    sid       = "ManageProjectRoles"
+    actions   = ["iam:GetRole", "iam:GetRolePolicy", "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:PutRolePolicy", "iam:DeleteRolePolicy"]
+    resources = ["arn:aws:iam::${local.account_id}:role/${var.name_prefix}-*"]
+  }
+
+  statement {
+    sid       = "ManageProjectTable"
+    actions   = ["dynamodb:DescribeTable", "dynamodb:DescribeContinuousBackups", "dynamodb:DescribeTimeToLive", "dynamodb:UpdateTable", "dynamodb:TagResource", "dynamodb:UntagResource", "dynamodb:ListTagsOfResource"]
+    resources = ["arn:aws:dynamodb:${local.region}:${local.account_id}:table/bdsmini*"]
+  }
+
+  statement {
+    sid       = "ManageProjectApi"
+    actions   = ["apigateway:GET", "apigateway:POST", "apigateway:PUT", "apigateway:PATCH", "apigateway:DELETE"]
+    resources = ["arn:aws:apigateway:${local.region}::/apis", "arn:aws:apigateway:${local.region}::/apis/*", "arn:aws:apigateway:${local.region}::/apis/*/routes", "arn:aws:apigateway:${local.region}::/apis/*/stages"]
+  }
+
+  statement {
+    sid       = "ManageProjectUserPool"
+    actions   = ["cognito-idp:Describe*", "cognito-idp:Get*", "cognito-idp:List*", "cognito-idp:UpdateUserPool", "cognito-idp:SetUserPoolMfaConfig"]
+    resources = ["arn:aws:cognito-idp:${local.region}:${local.account_id}:userpool/*"]
+  }
+
+  statement {
+    sid       = "ManageProjectLogGroups"
+    actions   = ["logs:DescribeLogGroups", "logs:ListTagsForResource", "logs:PutRetentionPolicy"]
+    resources = ["arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/lambda/${var.name_prefix}-*", "arn:aws:logs:${local.region}:${local.account_id}:log-group:/aws/http-api/${var.name_prefix}-*"]
+  }
+
+  statement {
+    sid       = "ManageProjectParameters"
+    actions   = ["ssm:GetParameter", "ssm:GetParameters", "ssm:PutParameter", "ssm:ListTagsForResource", "ssm:AddTagsToResource"]
+    resources = ["arn:aws:ssm:${local.region}:${local.account_id}:parameter/${var.name_prefix}/*"]
+  }
+
+  statement {
+    sid       = "ManageCloudFrontPolicies"
+    actions   = ["cloudfront:Get*", "cloudfront:List*", "cloudfront:DescribeFunction", "cloudfront:UpdateFunction", "cloudfront:CreateFunction"]
+    resources = ["arn:aws:cloudfront::${local.account_id}:function/${var.name_prefix}-*", "arn:aws:cloudfront::${local.account_id}:response-headers-policy/*"]
+  }
+
+  statement {
+    sid       = "ReadCloudFrontManagedPolicies"
+    actions   = ["cloudfront:ListCachePolicies", "cloudfront:ListOriginRequestPolicies", "cloudfront:GetCachePolicy", "cloudfront:GetOriginRequestPolicy"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "ReadCallerIdentity"
+    actions   = ["sts:GetCallerIdentity"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "deploy" {
+  name   = "deploy"
+  role   = aws_iam_role.deploy.id
+  policy = data.aws_iam_policy_document.deploy.json
+}
+
+output "deploy_role_arn" {
+  value = aws_iam_role.deploy.arn
+}
