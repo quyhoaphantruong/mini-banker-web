@@ -1,0 +1,16 @@
+{
+  "name": "mini-banker-desktop",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [ "shared", "backend", "frontend", "seed", "e2e"],
+  "scripts": {
+    "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}
