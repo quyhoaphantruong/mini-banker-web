@@ -39,7 +39,7 @@ export function parseConfig(raw: unknown): AppConfig {
     };
 }
 
-export async function loadFunction(): Promise<AppConfig> {
+export async function loadConfig(): Promise<AppConfig> {
     const res = await fetch('/config.json', {cache: 'no-store'})
     if (!res.ok) throw new Error(`config.json returned ${res.status}`)
     return parseConfig(await res.json())
