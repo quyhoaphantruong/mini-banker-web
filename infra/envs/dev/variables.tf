@@ -33,6 +33,11 @@ variable "grafana_url" {
     type = string
 }
 
+variable "grafana_otlp_endpoint" {
+    type = string
+    description = "Grafana Cloud OTLP gateway URL, e.g. https://otlp-gateway-prod-au-southeast-1.grafana.net/otlp"
+}
+
 variable "grafana_service_account_token" {
     type = string
     sensitive = true

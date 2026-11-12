@@ -11,5 +11,5 @@ output "lock_table_name" {
 }
 
 output "lock_table_arn" {
-    value = aws_dyanmodb_table.lock.arn
+    value = aws_dynamodb_table.lock.arn
 }

@@ -6,7 +6,7 @@ variable "region" {
 variable "state_bucket_name" {
   type = string
   default = null
-  description = "Globally unique. Defaults to bdsmini-tfstate<account id>."
+  description = "Globally unique. Defaults to bdsmini-tfstate-<account id>."
 }
 
 variable "lock_table_name" {

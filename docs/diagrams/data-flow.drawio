@@ -1,0 +1,229 @@
+<mxfile host="65bd71144e">
+    <diagram id="p1" name="Search customer by CRN">
+        <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1900" pageHeight="1200" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="z1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;dashPattern=8 4;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;fontSize=12;strokeColor=#82b366;" value="Browser (untrusted)" vertex="1">
+                    <mxGeometry height="400" width="220" x="-150" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="z2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;dashPattern=8 4;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;fontSize=12;strokeColor=#d79b00;" value="AWS (JWT verified)" vertex="1">
+                    <mxGeometry height="720" width="1220" x="340" y="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="spa" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" value="Banker SPA&#xa;(React, Cognito token)" vertex="1">
+                    <mxGeometry height="80" width="160" x="-140" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="apigw" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="API Gateway HTTP API v2&#xa;JWT authorizer&#xa;POST /search" vertex="1">
+                    <mxGeometry height="80" width="180" x="350" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="lam" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="customers Lambda&#xa;parse CRN (zod),&#xa;simulated-500 check" vertex="1">
+                    <mxGeometry height="120" width="220" x="600" y="170" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="CRN map item&#xa;PK=CRN#{crn}  SK=MAP&#xa;(capId)" vertex="1">
+                    <mxGeometry height="60" width="260" x="960" y="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="GET customer / accounts&#xa;customers Lambda" vertex="1">
+                    <mxGeometry height="80" width="220" x="600" y="420" as="geometry"/>
+                </mxCell>
+                <mxCell id="d2" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="Profile item&#xa;PK=CUST#{capId}  SK=PROFILE" vertex="1">
+                    <mxGeometry height="50" width="280" x="820" y="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="d3" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="Account items (Query begins_with ACCT#)&#xa;PK=CUST#{capId}  SK=ACCT#{no}&#xa;GSI1PK=ACCT#{no}, GSI1SK=CUST#{capId}" vertex="1">
+                    <mxGeometry height="70" width="320" x="1170" y="420" as="geometry"/>
+                </mxCell>
+                <mxCell id="aud" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Audit log line&#xa;(actor, capId, route, requestId)" vertex="1">
+                    <mxGeometry height="60" width="280" x="800" y="565" as="geometry"/>
+                </mxCell>
+                <mxCell id="err" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" value="Error response&#xa;404 NOT_FOUND / 500 INTERNAL" vertex="1">
+                    <mxGeometry height="70" width="200" x="340" y="560" as="geometry"/>
+                </mxCell>
+                <mxCell id="note" parent="1" style="text;html=1;whiteSpace=wrap;fontSize=10;" value="Step 1 resolves CRN to capId. Step 2 loads profile and accounts." vertex="1">
+                    <mxGeometry height="40" width="360" x="340" y="670" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="spa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="apigw" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CRN (JSON body) + Bearer token&lt;/font&gt;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="apigw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="lam" value="routeKey + CRN">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="lam" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="d1" value="GetItem CRN#crn / MAP">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="lam" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b85450;fontColor=#b85450;" target="err" value="404 CRN unknown (100000004)&#xa;500 simulated (100000005)">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="err" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b85450;fontColor=#b85450;" target="spa" value="error body {code, message}">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="lam" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="p2" value="SearchResponse {crn, capIds}">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="1" source="p2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="d2" value="GetItem profile (capId)">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" source="p2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="d3" value="Query accounts (capId)">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="1" source="p2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="aud" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;capId viewed&lt;/font&gt;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" edge="1" parent="1" source="p2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;entryX=0.5;entryY=1;" target="apigw" value="CustomerDto + AccountsResponse">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e13" edge="1" parent="1" source="apigw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0;exitY=0.8;entryX=1;entryY=0.8;" target="spa" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;200 customer + accounts (empty for 100000003)&lt;/font&gt;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg0" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;verticalAlign=top;fontStyle=1;" value="Legend" vertex="1">
+                    <mxGeometry height="170" width="260" x="1550" y="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg1" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Process" vertex="1">
+                    <mxGeometry height="30" width="100" x="1560" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg2" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="Data store item" vertex="1">
+                    <mxGeometry height="30" width="120" x="1560" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" value="External actor" vertex="1">
+                    <mxGeometry height="30" width="100" x="1560" y="220" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;fontSize=10;" value="Trust boundary" vertex="1">
+                    <mxGeometry height="30" width="110" x="1690" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg5" parent="1" style="text;html=1;fontColor=#b85450;fontSize=10;" value="Red = error path" vertex="1">
+                    <mxGeometry height="30" width="110" x="1690" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg6" parent="1" style="text;html=1;fontSize=10;" value="Black = happy flow" vertex="1">
+                    <mxGeometry height="30" width="110" x="1690" y="220" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="p2" name="Cancel PayTo mandate">
+        <mxGraphModel dx="3372" dy="486" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="1200" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="z1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;dashPattern=8 4;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;fontSize=12;strokeColor=#82b366;" value="Browser (untrusted)" vertex="1">
+                    <mxGeometry height="420" width="220" x="-240" y="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="z2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;dashPattern=8 4;strokeWidth=2;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;fontSize=12;strokeColor=#d79b00;" value="AWS (JWT verified)" vertex="1">
+                    <mxGeometry height="1020" width="1500" x="300" y="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="spa" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" value="Banker SPA&#xa;Confirm cancel dialog" vertex="1">
+                    <mxGeometry height="80" width="160" x="-200" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="apigw" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="API Gateway HTTP API v2&#xa;POST mandate cancel&#xa;(zod: reasonCode MD16)" vertex="1">
+                    <mxGeometry height="90" width="200" x="340" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="lam" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="mandates Lambda&#xa;cancelMandate use case" vertex="1">
+                    <mxGeometry height="90" width="200" x="620" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="d1" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="Idempotency item&#xa;PK=IDEMP#{mandateId}#cancel#{key}&#xa;SK=LOCK  (response JSON, ttl)" vertex="1">
+                    <mxGeometry height="60" width="320" x="960" y="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="d2" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="Mandate META item&#xa;PK=MANDATE#{mandateId}  SK=META&#xa;(status, version, capId)" vertex="1">
+                    <mxGeometry height="60" width="320" x="960" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="plan" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="planCancel&#xa;nextStatus(status, cancel)&#xa;build event + idempotency,&#xa;version+1" vertex="1">
+                    <mxGeometry height="110" width="220" x="620" y="360" as="geometry"/>
+                </mxCell>
+                <mxCell id="tx" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="commitCancel&#xa;single TransactWriteItems" vertex="1">
+                    <mxGeometry height="80" width="220" x="620" y="560" as="geometry"/>
+                </mxCell>
+                <mxCell id="w1" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="1. UPDATE META: status=CANCELLED, version+1, updatedAt&#xa;Cond: status IN CANCELLABLE_FROM AND version=expected&#xa;GSI2PK=CUST#{capId}#{status}, GSI2SK=MANDATE#{id}" vertex="1">
+                    <mxGeometry height="80" width="440" x="960" y="330" as="geometry"/>
+                </mxCell>
+                <mxCell id="w2" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="2. PUT audit event (cond attribute_not_exists)&#xa;PK=MANDATE#{mandateId}  SK=EVENT#{at}#{seq}&#xa;(action, reasonCode, actor, requestId)" vertex="1">
+                    <mxGeometry height="70" width="440" x="960" y="450" as="geometry"/>
+                </mxCell>
+                <mxCell id="w3" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="3. PUT idempotency item (cond attribute_not_exists)&#xa;PK=IDEMP#{mandateId}#cancel#{key}  SK=LOCK&#xa;response + ttl = now + 24h" vertex="1">
+                    <mxGeometry height="70" width="440" x="1010" y="630" as="geometry"/>
+                </mxCell>
+                <mxCell id="conf" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="On rejected: re-read idempotency winner,&#xa;then re-read META, map to result" vertex="1">
+                    <mxGeometry height="80" width="220" x="700" y="720" as="geometry"/>
+                </mxCell>
+                <mxCell id="ok" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="200 cancelled&#xa;MandateDetailDto" vertex="1">
+                    <mxGeometry height="60" width="200" x="340" y="860" as="geometry"/>
+                </mxCell>
+                <mxCell id="rep" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="200 replayed&#xa;stored response (same body)" vertex="1">
+                    <mxGeometry height="60" width="220" x="680" y="970" as="geometry"/>
+                </mxCell>
+                <mxCell id="c409" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" value="409 invalid transition&#xa;(not cancellable) /&#xa;409 version conflict" vertex="1">
+                    <mxGeometry height="70" width="220" x="950" y="870" as="geometry"/>
+                </mxCell>
+                <mxCell id="c404" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" value="404 mandate not found&#xa;400 bad input / missing Idempotency-Key" vertex="1">
+                    <mxGeometry height="70" width="260" x="1180" y="860" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="spa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="apigw" value="&lt;font style=&quot;font-size: 12px;&quot;&gt;mandateId + Idempotency-Key + reasonCode + token&lt;/font&gt;">
+                    <mxGeometry relative="1" x="0.0035" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="apigw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="lam" value="mandateId, idempotencyKey, reasonCode, actor">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="lam" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=0;entryX=0;entryY=0.5;" target="d1" value="1. GetItem (replay check)">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="lam" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="d2" value="2. GetItem META">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="d2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=1;entryY=0.3;" target="plan" value="MandateMetaItem {status, version, capId}">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="plan" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="tx" value="CancelPlan {toStatus, expectedVersion, event, idempotency}">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="1" source="tx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;" target="w1" value="Update">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" source="tx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" target="w2" value="Put">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="1" source="tx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=1;exitY=0.8;entryX=0;entryY=0.5;" target="w3" value="Put">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" edge="1" parent="1" source="tx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.25;exitY=1;entryX=1;entryY=0.5;" target="ok" value="committed: 200">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e13" edge="1" parent="1" source="tx" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b85450;fontColor=#b85450;" target="conf" value="TransactionCanceled">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e14" edge="1" parent="1" source="conf" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="rep" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;idempotency winner exists: replay&lt;/font&gt;">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e15" edge="1" parent="1" source="conf" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b85450;fontColor=#b85450;exitX=1;exitY=0.5;entryX=0.5;entryY=0;" target="c409" value="not cancellable or version mismatch">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e16" edge="1" parent="1" source="lam" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b85450;fontColor=#b85450;exitX=0;exitY=1;entryX=0.5;entryY=0;" target="c404" value="no META / invalid input">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e17" edge="1" parent="1" source="ok" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;endFill=1;fontSize=10;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;entryX=0.5;entryY=1;" target="spa" value="200 response">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg0" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;verticalAlign=top;fontStyle=1;" value="Legend" vertex="1">
+                    <mxGeometry height="170" width="260" x="1500" y="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg1" parent="1" style="rounded=1;arcSize=30;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" value="Process" vertex="1">
+                    <mxGeometry height="30" width="100" x="1510" y="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg2" parent="1" style="shape=partialRectangle;whiteSpace=wrap;html=1;left=0;right=0;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" value="Data store item" vertex="1">
+                    <mxGeometry height="30" width="120" x="1510" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" value="External actor" vertex="1">
+                    <mxGeometry height="30" width="100" x="1510" y="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;strokeWidth=2;fontSize=10;" value="Trust boundary" vertex="1">
+                    <mxGeometry height="30" width="110" x="1640" y="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg5" parent="1" style="text;html=1;fontColor=#b85450;fontSize=10;" value="Red = error path" vertex="1">
+                    <mxGeometry height="30" width="110" x="1640" y="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg6" parent="1" style="text;html=1;fontSize=10;" value="Black = happy flow" vertex="1">
+                    <mxGeometry height="30" width="110" x="1640" y="180" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

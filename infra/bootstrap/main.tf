@@ -1,7 +1,7 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  state_bucket_name = coalesce(var.state_bucket_name, "bdsmini-tfsate-${data.aws_caller_identity.current.account_id}")
+  state_bucket_name = coalesce(var.state_bucket_name, "bdsmini-tfstate-${data.aws_caller_identity.current.account_id}")
 }
 
 resource "aws_s3_bucket" "state" {

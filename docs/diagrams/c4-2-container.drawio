@@ -1,0 +1,88 @@
+<mxfile host="65bd71144e">
+    <diagram name="C4 Container" id="c4-2">
+        <mxGraphModel dx="2485" dy="342" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1700" pageHeight="1000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="b" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;dashed=1;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;strokeColor=#444444;" value="System boundary: Mini Banker Desktop (AWS)" vertex="1">
+                    <mxGeometry height="720" width="1160" x="270" y="190" as="geometry"/>
+                </mxCell>
+                <mxCell id="p" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#08427B;fontColor=#FFFFFF;strokeColor=#052E56;" value="&lt;b&gt;Banker&lt;/b&gt;&lt;br&gt;[Person]&lt;br&gt;Finds customers by CRN, views accounts and PayTo mandates, cancels mandates" vertex="1">
+                    <mxGeometry height="120" width="160" x="-80" y="300" as="geometry"/>
+                </mxCell>
+                <mxCell id="spa" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;fontColor=#FFFFFF;strokeColor=#0B4884;" value="&lt;b&gt;Vite React SPA&lt;/b&gt;&lt;br&gt;[React, TypeScript, oidc-client-ts]&lt;br&gt;Banker desktop UI; loads /config.json" vertex="1">
+                    <mxGeometry height="110" width="220" x="240" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="cf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;fontColor=#FFFFFF;strokeColor=#0B4884;" value="&lt;b&gt;Static site hosting&lt;/b&gt;&lt;br&gt;[CloudFront + private S3 (OAC), SPA rewrite function]&lt;br&gt;Serves SPA bundle and config.json" vertex="1">
+                    <mxGeometry height="120" width="220" x="240" y="500" as="geometry"/>
+                </mxCell>
+                <mxCell id="apigw" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;fontColor=#FFFFFF;strokeColor=#0B4884;" value="&lt;b&gt;API Gateway HTTP API&lt;/b&gt;&lt;br&gt;[AWS API Gateway v2, payload 2.0]&lt;br&gt;Routes; JWT authorizer; access logs" vertex="1">
+                    <mxGeometry height="110" width="220" x="560" y="280" as="geometry"/>
+                </mxCell>
+                <mxCell id="l1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;fontColor=#FFFFFF;strokeColor=#0B4884;" value="&lt;b&gt;launch Lambda&lt;/b&gt;&lt;br&gt;[Node.js 22, esbuild bundle]" vertex="1">
+                    <mxGeometry height="80" width="200" x="900" y="240" as="geometry"/>
+                </mxCell>
+                <mxCell id="l2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;fontColor=#FFFFFF;strokeColor=#0B4884;" value="&lt;b&gt;customers Lambda&lt;/b&gt;&lt;br&gt;[Node.js 22, esbuild bundle]&lt;br&gt;Customer search and accounts" vertex="1">
+                    <mxGeometry height="90" width="200" x="900" y="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="l3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;fontColor=#FFFFFF;strokeColor=#0B4884;" value="&lt;b&gt;mandates Lambda&lt;/b&gt;&lt;br&gt;[Node.js 22, esbuild bundle]&lt;br&gt;List and cancel PayTo mandates" vertex="1">
+                    <mxGeometry height="90" width="200" x="900" y="530" as="geometry"/>
+                </mxCell>
+                <mxCell id="db" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#1168BD;fontColor=#FFFFFF;strokeColor=#0B4884;" value="&lt;b&gt;DynamoDB table bdsmini&lt;/b&gt;&lt;br&gt;[Single table; GSI1 account lookup, GSI2 mandates by customer and status, ttl idempotency]" vertex="1">
+                    <mxGeometry height="130" width="260" x="900" y="720" as="geometry"/>
+                </mxCell>
+                <mxCell id="cog" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;fontColor=#FFFFFF;strokeColor=#0B4884;" value="&lt;b&gt;Cognito&lt;/b&gt;&lt;br&gt;[User pool, hosted domain, SPA client, banker group]&lt;br&gt;Banker sign-in" vertex="1">
+                    <mxGeometry height="110" width="240" x="560" y="720" as="geometry"/>
+                </mxCell>
+                <mxCell id="obs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;fontColor=#FFFFFF;strokeColor=#6B6B6B;" value="&lt;b&gt;Observability&lt;/b&gt;&lt;br&gt;[Grafana Cloud via OTLP/HTTP; CloudWatch logs]&lt;br&gt;RED and business dashboards, alerts" vertex="1">
+                    <mxGeometry height="130" width="200" x="1420" y="380" as="geometry"/>
+                </mxCell>
+                <mxCell id="lg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#FFFFFF;strokeColor=#444444;" value="&lt;b&gt;Legend&lt;/b&gt;&lt;br&gt;Blue: container in system&lt;br&gt;Dark blue: person&lt;br&gt;Grey: external service&lt;br&gt;Dashed box: system boundary&lt;br&gt;Arrows: caller to callee, labelled with protocol" vertex="1">
+                    <mxGeometry height="150" width="200" x="20" y="720" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" edge="1" parent="1" source="p" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="spa" value="Uses [HTTPS]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" edge="1" parent="1" source="p" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="cf" value="Loads app [HTTPS]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e3" edge="1" parent="1" source="cf" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="spa" value="Delivers static bundle [HTTPS]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e4" edge="1" parent="1" source="spa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="apigw" value="API calls with Bearer JWT [HTTPS/JSON]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e5" edge="1" parent="1" source="spa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="cog" value="Sign in [OIDC code+PKCE]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e6" edge="1" parent="1" source="apigw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="cog" value="Validates JWT [JWT authorizer, JWKS]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e7" edge="1" parent="1" source="apigw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="l1" value="Proxy [Lambda integration]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e8" edge="1" parent="1" source="apigw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="l2" value="Proxy [Lambda integration]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e9" edge="1" parent="1" source="apigw" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="l3" value="Proxy [Lambda integration]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e10" edge="1" parent="1" source="l2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="db" value="Queries [AWS SDK, DynamoDB API]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e11" edge="1" parent="1" source="l3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="db" value="Reads; cancel via TransactWriteItems [AWS SDK]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" edge="1" parent="1" source="l1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;dashed=1;" target="obs" value="Telemetry [OTLP/HTTP]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e13" edge="1" parent="1" source="l2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;dashed=1;" target="obs" value="Telemetry [OTLP/HTTP]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e14" edge="1" parent="1" source="l3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;dashed=1;" target="obs" value="Telemetry [OTLP/HTTP]">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

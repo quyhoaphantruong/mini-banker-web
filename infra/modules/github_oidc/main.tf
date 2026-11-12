@@ -7,9 +7,10 @@ variable "github_repository" {
   description = "owner/repo allowed to assume the deploy role."
 }
 
-variable "branch" {
-  type    = string
-  default = "main"
+variable "github_environment" {
+  type        = string
+  default     = "dev"
+  description = "GitHub environment the deploy job uses. A job with an environment gets the OIDC subject repo:<repo>:environment:<name>."
 }
 
 variable "create_oidc_provider" {
@@ -80,7 +81,7 @@ data "aws_iam_policy_document" "trust" {
     condition {
       test     = "StringEquals"
       variable = "${local.oidc_url}:sub"
-      values   = ["repo:${var.github_repository}:ref:refs/heads/${var.branch}"]
+      values   = ["repo:${var.github_repository}:environment:${var.github_environment}"]
     }
   }
 }

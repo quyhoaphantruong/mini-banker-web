@@ -7,54 +7,79 @@ on:
     branches: [main]
 
 permissions:
-    id-token: write
-    contents: read
+  id-token: write
+  contents: read
 
 concurrency:
-    group: deploy-dev
-    cancel-in-progress: false
+  group: deploy-dev
+  cancel-in-progress: false
 
 env:
-    AWS_REGION: ap-southeast-2
-    TF_DIR: infra/envs/dev
+  AWS_REGION: ap-southeast-2
+  TF_DIR: infra/envs/dev
+  TF_IN_AUTOMATION: "1"
+  TF_INPUT: "0"
 
 jobs:
-    deploy:
-      if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
-      runs-on: ubuntu-latest
-      environment: dev
-      timeout-minutes: 45
-      steps:
-        - uses: actions/checkout@v4
-          with: 
-            ref: ${{ github.event.workflow_run.head_sha }}
-        - uses: actions/setup-node@v4
-          with:
-            node-version: 22
-            cache: npm
-        - uses: aws-actions/configure-aws-credentials@v4
-          with: 
-            role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
-            aws-region: ${{ env.AWS_REGION }}
-        - uses: hashicorp/setup-terraform@v3
-          with: 
-            terraform_wrapper: false
-        - run: npm ci
-        - name: Terraform Init
-          run: terraform init
-          working-directory: ${{ env.TF_DIR }}
-        - name: Terraform plan
-          run: terraform plan -input=false -out=tfplan
-          working-directory: ${{ env.TF_DIR }}
-        - name: Terraform Apply
-          run: terraform apply -auto-approve
-          working-directory: ${{ env.TF_DIR }}
-        - name: Publish frontend and invalidate CloudFront
-          working-directory: ${{ env.TF_DIR }}
-          run: |
-            bucket=$(terraform output -raw site_bucket)
-            distribution=$(terraform output -raw distribution_id)
-            # Terraform owns config.json, so --delete must not remove it
-            aws s3 sync "$GITHUB_WORKSPACE/frontend/dist" "s3://${bucket}" --delete --exclude config.json
-            aws cloudfront create-invalidation --distribution-id "$distribution" --paths "/*"
-          
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    # The OIDC subject becomes repo:<owner>/<repo>:environment:dev, which the deploy role trusts.
+    environment: dev
+    timeout-minutes: 45
+    env:
+      # terraform.tfvars is gitignored, so CI passes every variable as TF_VAR_* from the dev environment.
+      TF_VAR_state_bucket_name: ${{ vars.TF_STATE_BUCKET }}
+      TF_VAR_lock_table_name: ${{ vars.TF_LOCK_TABLE || 'bdsmini-tflock' }}
+      TF_VAR_github_repository: ${{ github.repository }}
+      TF_VAR_alert_email: ${{ vars.ALERT_EMAIL }}
+      TF_VAR_grafana_url: ${{ vars.GRAFANA_URL }}
+      TF_VAR_grafana_otlp_endpoint: ${{ vars.GRAFANA_OTLP_ENDPOINT }}
+      TF_VAR_grafana_service_account_token: ${{ secrets.GRAFANA_SERVICE_ACCOUNT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Terraform zips backend/dist/*.mjs at plan time, and the sync step below uploads frontend/dist.
+      - name: Build backend and frontend
+        run: npm run build -w backend -w frontend
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform init -backend-config="bucket=${TF_VAR_state_bucket_name}" -backend-config="dynamodb_table=${TF_VAR_lock_table_name}"
+
+      - name: Terraform plan
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform plan -out=tfplan
+
+      - name: Terraform apply
+        working-directory: ${{ env.TF_DIR }}
+        run: terraform apply tfplan
+
+      - name: Publish frontend and invalidate CloudFront
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          bucket=$(terraform output -raw site_bucket)
+          distribution=$(terraform output -raw distribution_id)
+          # Terraform owns config.json (frontend/dist has a local devAuth copy), so never upload or delete it.
+          aws s3 sync "$GITHUB_WORKSPACE/frontend/dist" "s3://${bucket}" --delete --exclude config.json
+          aws cloudfront create-invalidation --distribution-id "$distribution" --paths "/*"
+          echo "Deployed to $(terraform output -raw site_url)" >> "$GITHUB_STEP_SUMMARY"
