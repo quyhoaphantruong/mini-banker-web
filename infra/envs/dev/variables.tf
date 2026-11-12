@@ -1,6 +1,6 @@
 variable "region" {
   type = string
-  default = "ap-southteast-2"
+  default = "ap-southeast-2"
 }
 
 variable "name_prefix" {
@@ -60,7 +60,7 @@ variable "custom_domain" {
 
 variable "acm_certificate_arn" {
   type = string
-  default = "null"
+  default = null
 }
 
 variable "api_throttling_rate_limit" {

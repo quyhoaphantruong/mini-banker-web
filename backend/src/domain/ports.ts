@@ -1,7 +1,7 @@
 import type { MandateId, MandateMetaItem } from "@mbd/shared";
 import type { CancelPlan, StoredResponse } from "./mandate";
 
-export type CommitOutcome = { kind: 'commited' } | { kind: 'rejected'; metaRejected: boolean}
+export type CommitOutcome = { kind: 'committed' } | { kind: 'rejected'; metaRejected: boolean}
 
 export interface CancelRepository {
     getStoredCancel(mandateId: MandateId, key: string): Promise<StoredResponse | null>

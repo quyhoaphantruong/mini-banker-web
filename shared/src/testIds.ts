@@ -21,6 +21,7 @@ export const TEST_IDS = {
   mandateViewDetails: 'mandate-view-details',
   mandateActionRequired: 'mandate-action-required',
   mandateUpdatedBadge: 'mandate-updated-badge',
+  mandateStatus: 'mandate-status',
   mandateEventRow: 'mandate-event-row',
   mandateTxnRow: 'mandate-txn-row',
   backToMandates: 'back-to-mandates',

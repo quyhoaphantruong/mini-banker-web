@@ -121,7 +121,7 @@ export const mandateRoutes: RouteDef[] = [
         idempotencyKey,
         actor: ctx.actor,
         requestId: ctx.requestId,
-        reasonCode,
+        reasonCode: reasonCode ?? "MD16",
         now: now(),
       });
 

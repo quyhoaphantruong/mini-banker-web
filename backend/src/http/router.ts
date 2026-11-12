@@ -24,4 +24,3 @@ export function matchRoute(routes: RouteDef[], event: APIGatewayProxyEventV2With
 
   return null
 }
-```[cite: 6]
