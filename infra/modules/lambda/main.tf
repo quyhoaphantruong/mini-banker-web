@@ -28,15 +28,18 @@ variable "index_arns" {
 }
 
 variable "otlp_endpoint" {
-  type = string
+  type    = string
+  default = null
 }
 
 variable "otel_auth_parameter_name" {
-  type = string
+  type    = string
+  default = null
 }
 
 variable "otel_auth_parameter_arn" {
-  type = string
+  type    = string
+  default = null
 }
 
 variable "handler" {
@@ -101,10 +104,14 @@ data "aws_iam_policy_document" "this" {
     resources = ["${aws_cloudwatch_log_group.this[each.key].arn}:*"]
   }
 
-  statement {
-    sid       = "ReadOtlpToken"
-    actions   = ["ssm:GetParameter"]
-    resources = [var.otel_auth_parameter_arn]
+  dynamic "statement" {
+    for_each = var.otel_auth_parameter_arn != null ? [1] : []
+
+    content {
+      sid       = "ReadOtlpToken"
+      actions   = ["ssm:GetParameter"]
+      resources = [var.otel_auth_parameter_arn]
+    }
   }
 
   dynamic "statement" {
@@ -151,12 +158,16 @@ resource "aws_lambda_function" "this" {
 
   # AWS_REGION is reserved. The Lambda runtime sets it.
   environment {
-    variables = {
-      TABLE_NAME                  = var.table_name
-      OTEL_EXPORTER_OTLP_ENDPOINT = var.otlp_endpoint
-      OTEL_AUTH_PARAMETER_NAME    = var.otel_auth_parameter_name
-      OTEL_SERVICE_NAME           = "${var.name_prefix}-${each.key}"
-    }
+    variables = merge(
+      {
+        TABLE_NAME        = var.table_name
+        OTEL_SERVICE_NAME = "${var.name_prefix}-${each.key}"
+      },
+      var.otlp_endpoint == null ? {} : {
+        OTEL_EXPORTER_OTLP_ENDPOINT = var.otlp_endpoint
+        OTEL_AUTH_PARAMETER_NAME    = var.otel_auth_parameter_name
+      }
+    )
   }
 
   depends_on = [aws_iam_role_policy.this]

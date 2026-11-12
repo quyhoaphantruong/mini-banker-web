@@ -35,7 +35,7 @@ output "lambda_function_names" {
 }
 
 output "otlp_token_parameter_name" {
-  value = module.observability.otlp_token_parameter_name
+  value = var.enable_observability ? module.observability[0].otlp_token_parameter_name : null
 }
 
 output "github_deploy_role_arn" {

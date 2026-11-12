@@ -73,6 +73,7 @@ module "dynamodb" {
 }
 
 module "observability" {
+  count                     = var.enable_observability ? 1 : 0
   source                    = "../../modules/observability"
   name_prefix               = var.name_prefix
   alert_email               = var.alert_email
@@ -87,9 +88,9 @@ module "lambda" {
   table_name               = module.dynamodb.table_name
   table_arn                = module.dynamodb.table_arn
   index_arns               = module.dynamodb.index_arns
-  otlp_endpoint            = var.grafana_otlp_endpoint
-  otel_auth_parameter_name = module.observability.otlp_token_parameter_name
-  otel_auth_parameter_arn  = module.observability.otlp_token_parameter_arn
+  otlp_endpoint            = var.enable_observability ? var.grafana_otlp_endpoint : null
+  otel_auth_parameter_name = var.enable_observability ? module.observability[0].otlp_token_parameter_name : null
+  otel_auth_parameter_arn  = var.enable_observability ? module.observability[0].otlp_token_parameter_arn : null
   functions                = local.functions
 }
 

@@ -25,21 +25,32 @@ variable "create_github_oidc_provider" {
   default = true
 }
 
-variable "alert_email" {
-    type = string
+variable "enable_observability" {
+  type        = bool
+  default     = false
+  description = "Create the Grafana Cloud dashboards/alerts and send OTLP telemetry. When false, none of the grafana_* variables are needed."
 }
 
+variable "alert_email" {
+    type    = string
+    default = ""
+}
+
+# Placeholder defaults keep the grafana provider configurable when observability is off.
 variable "grafana_url" {
-    type = string
+    type    = string
+    default = "http://localhost:3000"
 }
 
 variable "grafana_otlp_endpoint" {
     type = string
+    default = ""
     description = "Grafana Cloud OTLP gateway URL, e.g. https://otlp-gateway-prod-au-southeast-1.grafana.net/otlp"
 }
 
 variable "grafana_service_account_token" {
     type = string
+    default = "unused"
     sensitive = true
 }
 
