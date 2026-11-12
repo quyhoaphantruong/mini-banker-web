@@ -35,13 +35,17 @@ export const gsi1ForAccount = (no: AccountNo, capId: CapId) => ({
   GSI1SK: customerPk(capId),
 });
 
+/** GSI2 partition for one customer's mandates in one status. */
+export const gsi2PkForStatus = (capId: CapId, status: MandateStatus) =>
+  `${customerPk(capId)}#${status}`;
+
 /** GSI2 lists a customer's mandates by status, ordered by mandate id (UUIDv7 is time-ordered). */
 export const gsi2ForMandate = (
   capId: CapId,
   status: MandateStatus,
   id: MandateId,
 ) => ({
-  GSI2PK: `${customerPk(capId)}#${status}`,
+  GSI2PK: gsi2PkForStatus(capId, status),
   GSI2SK: mandatePk(id),
 });
 

@@ -90,9 +90,9 @@ export async function createTelemetry(
 
   const tracerProvider = new TracerProvider({
     resource,
-    spanProcessors: [new BatchSpanProcessor(
-        new OTLPTraceExporter({ url: `${endpoint}/v1/traces`, headers }),
-      ),
+    spanProcessors: [new BatchSpanProcessor({
+        exporter: new OTLPTraceExporter({ url: `${endpoint}/v1/traces`, headers }),
+      }),
     ],
   });
 

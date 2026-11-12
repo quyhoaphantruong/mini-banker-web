@@ -6,6 +6,6 @@ export const FIXTURE_CUSTOMERS = {
   noAccounts: { crn: "100000003", capId: "7000000003" as CapId },
 } as const;
 
-export const CRN_NOT_FOUND = '10000404'
+export const CRN_NOT_FOUND = "100000004";
 
-export const CRN_SIMULATED_500 = "10000500";
+export const CRN_SIMULATED_500 = "100000500";

@@ -10,7 +10,7 @@ import {
   TABLE,
   crnPk,
   customerPk,
-  gsi2ForMandate,
+  gsi2PkForStatus,
   mandatePk,
   type AccountItem,
   type AccountNo,
@@ -117,7 +117,7 @@ export function createRepository(db: Db): Repository {
         return queryAll<CustomerMandateItem>({
           IndexName: TABLE.gsi2.name,
           KeyConditionExpression: "GSI2PK = :pk",
-          ExpressionAttributeValues: { ":pk": gsi2ForMandate(capId, status) },
+          ExpressionAttributeValues: { ":pk": gsi2PkForStatus(capId, status) },
           ScanIndexForward: false,
         });
       }
@@ -144,7 +144,7 @@ export function createRepository(db: Db): Repository {
     async getStoredCancel(mandateId, key) {
       const item = await getItem<IdempotencyItem>(
         cancelIdempotencyPk(mandateId, key),
-        SK.idempotency,
+        SK.idempotencyLock,
       );
       return item ? castItem<StoredResponse>(JSON.parse(item.response)) : null;
     },

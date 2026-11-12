@@ -4,8 +4,8 @@ import { invalidRequest } from "./errors.js";
 
 const idSchema = z.string().regex(/^[A-Za-z0-9-]{1,64}$/);
 
-export const capIdParam = (raw: string | undefined): CapId => parseWith(idSchema, raw, "capId");
-export const mandateIdParam = (raw: string | undefined): MandateId => parseWith(idSchema, raw, "mandateId");
+export const capIdParam = (raw: string | undefined): CapId => parseWith(idSchema, raw, "capId") as CapId;
+export const mandateIdParam = (raw: string | undefined): MandateId => parseWith(idSchema, raw, "mandateId") as MandateId;
 
 export const searchBodySchema = z.object({
   crn: z.string().regex(/^\d{3,15}$/),
