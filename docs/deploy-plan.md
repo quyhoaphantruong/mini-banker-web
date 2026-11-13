@@ -107,17 +107,17 @@ Auth is the IAM user `bdsmini-dev-github-deploy` (access keys as GitHub secrets)
 - [x] Deploy run: plan shows no unexpected changes (run succeeded; plan contents not reviewed) (infra already exists from the local apply)
 - [ ] If AccessDenied: widen the deploy role (Phase 0 follow-up), apply locally, re-run
 - [x] Site still works after the CI deploy (smoke test passed, user confirmed)
-- [ ] Every merge to `main` now deploys
+- [x] Every merge to `main` now deploys (PR #2 merge went through a PR with required checks)
 
 ## Phase 5: CloudFront
 
 AWS Support enabled CloudFront on the account (`aws cloudfront list-distributions` returns an empty list, no error). `enable_cloudfront` now defaults to `true` so CI applies do not tear the distribution down.
 
-- [ ] Merge the PR that flips the default (branch protection requires a PR)
-- [ ] Local apply as `mbd-admin` in `infra/envs/dev` (the deploy user cannot create these): `terraform plan` then `terraform apply` (distribution takes 5-15 min; Cognito callback/logout URLs, `config.json` and API CORS change)
-- [ ] Upload the SPA: `aws s3 sync frontend/dist s3://bdsmini-dev-site-070404529867 --delete --exclude config.json --profile mbd-admin` (or let Deploy do it)
-- [ ] Open the `site_url` output (`https://...cloudfront.net`), log in, repeat the smoke test (`100000001`, cancel a mandate, `100000004`)
-- [ ] Widen the deploy policy if CI hits AccessDenied on CloudFront reads or `cloudfront:CreateInvalidation`; apply locally
+- [x] Merge the PR that flips the default (branch protection requires a PR)
+- [x] Local apply as `mbd-admin` in `infra/envs/dev` (the deploy user cannot create these): `terraform plan` then `terraform apply` (distribution takes 5-15 min; Cognito callback/logout URLs, `config.json` and API CORS change)
+- [x] Upload the SPA: `aws s3 sync frontend/dist s3://bdsmini-dev-site-070404529867 --delete --exclude config.json --profile mbd-admin` (or let Deploy do it)
+- [x] Open the `site_url` output (`https://...cloudfront.net`), log in, repeat the smoke test (`100000001`, cancel a mandate, `100000004`)
+- [ ] Check the post-merge Deploy run; widen the deploy policy if CI hits AccessDenied on CloudFront reads or `cloudfront:CreateInvalidation`; apply locally
 
 ## Teardown and cost
 
@@ -157,3 +157,5 @@ AWS Support enabled CloudFront on the account (`aws cloudfront list-distribution
 | 2026-11-13 | Deploy apply via CI succeeded: 0 added, 3 changed, 0 destroyed (outputs unchanged; the three Lambdas). Skipped for now: deactivating the `mbd-admin` key |
 | 2026-11-13 | User protected `main` and ran `terraform fmt`. AWS User Notifications verification email received; user to click Verify email (expires in 12h) and tick the Budgets subscription item once confirmed |
 | 2026-11-13 | AWS Support enabled CloudFront. Branch `cloudfront-default-on` flips `enable_cloudfront` default to true and adds Phase 5. Local apply and SPA upload pending |
+| 2026-11-13 | CloudFront live: local apply 5 added, 7 changed, 0 destroyed; `site_url` `https://d21tuarzeokcq6.cloudfront.net`, `distribution_id` `E1YZFWYC02AYQ3`. SPA synced to the site bucket (only `index.html` differed). Smoke test on the CloudFront URL passed. PR #2 merged: `enable_cloudfront` defaults to true |
+| 2026-11-13 | Post-merge Deploy failed at plan refresh: deploy user lacked `cloudfront:GetOriginAccessControl` (AccessDenied). Branch `cloudfront-deploy-perms` adds OAC read/update, distribution tag and config actions to the deploy policy; needs a local apply as `mbd-admin`, then re-run Deploy |
