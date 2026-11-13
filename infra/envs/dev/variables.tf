@@ -22,8 +22,8 @@ variable "github_repository" {
 
 variable "enable_cloudfront" {
   type        = bool
-  default     = false
-  description = "Serve the SPA and API through CloudFront. Needs AWS account verification. When false the SPA runs from local_dev_origin and calls the API directly."
+  default     = true
+  description = "Serve the SPA and API through CloudFront. Needs AWS account verification (done for this account). Default true so CI applies keep the distribution. When false the SPA runs from local_dev_origin and calls the API directly."
 }
 
 variable "github_auth_mode" {

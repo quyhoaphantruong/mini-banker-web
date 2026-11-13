@@ -28,7 +28,7 @@ jobs:
     timeout-minutes: 45
     env:
       # terraform.tfvars is gitignored, so CI passes every variable as TF_VAR_* from the dev environment.
-      # Observability, CloudFront and auth mode use the defaults in envs/dev/variables.tf (all off / iam_user).
+      # Observability, CloudFront and auth mode use the defaults in envs/dev/variables.tf (observability off, CloudFront on, auth mode iam_user).
       # Empty fallbacks would override those defaults, so optional values fall back to the same defaults here.
       TF_VAR_state_bucket_name: ${{ vars.TF_STATE_BUCKET }}
       TF_VAR_lock_table_name: ${{ vars.TF_LOCK_TABLE || 'bdsmini-tflock' }}
@@ -82,7 +82,7 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: |
           bucket=$(terraform output -raw site_bucket)
-          # distribution_id is null while enable_cloudfront = false; -raw fails on null, so read it as JSON.
+          # distribution_id is null when enable_cloudfront = false; -raw fails on null, so read it as JSON.
           distribution=$(terraform output -json distribution_id | jq -r '. // empty')
           # Terraform owns config.json (frontend/dist has a local devAuth copy), so never upload or delete it.
           aws s3 sync "$GITHUB_WORKSPACE/frontend/dist" "s3://${bucket}" --delete --exclude config.json
