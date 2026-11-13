@@ -20,6 +20,18 @@ variable "github_repository" {
   type = string
 }
 
+variable "enable_cloudfront" {
+  type        = bool
+  default     = false
+  description = "Serve the SPA and API through CloudFront. Needs AWS account verification. When false the SPA runs from local_dev_origin and calls the API directly."
+}
+
+variable "github_auth_mode" {
+  type        = string
+  default     = "iam_user"
+  description = "oidc or iam_user. See modules/github_oidc."
+}
+
 variable "create_github_oidc_provider" {
   type = bool
   default = true

@@ -32,6 +32,12 @@ variable "throttling_rate_limit" {
   default = 10
 }
 
+variable "cors_allow_origins" {
+  type        = list(string)
+  default     = []
+  description = "Browser origins allowed to call the API directly. Needed when the SPA is not served through CloudFront."
+}
+
 variable "enable_access_logs" {
   type = bool
   default = false
@@ -45,6 +51,17 @@ variable "access_log_retention_days" {
 resource "aws_apigatewayv2_api" "this" {
   name = "${var.name_prefix}-api"
   protocol_type = "HTTP"
+
+  dynamic "cors_configuration" {
+    for_each = length(var.cors_allow_origins) > 0 ? [1] : []
+
+    content {
+      allow_origins = var.cors_allow_origins
+      allow_methods = ["GET", "POST", "OPTIONS"]
+      allow_headers = ["authorization", "content-type", "idempotency-key"]
+      max_age       = 3600
+    }
+  }
 }
 
 resource "aws_apigatewayv2_authorizer" "jwt" {

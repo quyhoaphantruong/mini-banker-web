@@ -7,7 +7,6 @@ on:
     branches: [main]
 
 permissions:
-  id-token: write
   contents: read
 
 concurrency:
@@ -24,18 +23,21 @@ jobs:
   deploy:
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
     runs-on: ubuntu-latest
-    # The OIDC subject becomes repo:<owner>/<repo>:environment:dev, which the deploy role trusts.
+    # Variables and secrets come from the dev environment.
     environment: dev
     timeout-minutes: 45
     env:
       # terraform.tfvars is gitignored, so CI passes every variable as TF_VAR_* from the dev environment.
+      # Observability, CloudFront and auth mode use the defaults in envs/dev/variables.tf (all off / iam_user).
+      # Empty fallbacks would override those defaults, so optional values fall back to the same defaults here.
       TF_VAR_state_bucket_name: ${{ vars.TF_STATE_BUCKET }}
       TF_VAR_lock_table_name: ${{ vars.TF_LOCK_TABLE || 'bdsmini-tflock' }}
       TF_VAR_github_repository: ${{ github.repository }}
       TF_VAR_alert_email: ${{ vars.ALERT_EMAIL }}
-      TF_VAR_grafana_url: ${{ vars.GRAFANA_URL }}
+      TF_VAR_enable_observability: ${{ vars.ENABLE_OBSERVABILITY || 'false' }}
+      TF_VAR_grafana_url: ${{ vars.GRAFANA_URL || 'http://localhost:3000' }}
       TF_VAR_grafana_otlp_endpoint: ${{ vars.GRAFANA_OTLP_ENDPOINT }}
-      TF_VAR_grafana_service_account_token: ${{ secrets.GRAFANA_SERVICE_ACCOUNT_TOKEN }}
+      TF_VAR_grafana_service_account_token: ${{ secrets.GRAFANA_SERVICE_ACCOUNT_TOKEN || 'unused' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -52,9 +54,11 @@ jobs:
       - name: Build backend and frontend
         run: npm run build -w backend -w frontend
 
+      # github_auth_mode = iam_user (an SCP blocks the OIDC provider): access keys of bdsmini-dev-github-deploy.
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
       - uses: hashicorp/setup-terraform@v3
@@ -78,8 +82,13 @@ jobs:
         working-directory: ${{ env.TF_DIR }}
         run: |
           bucket=$(terraform output -raw site_bucket)
-          distribution=$(terraform output -raw distribution_id)
+          # distribution_id is null while enable_cloudfront = false; -raw fails on null, so read it as JSON.
+          distribution=$(terraform output -json distribution_id | jq -r '. // empty')
           # Terraform owns config.json (frontend/dist has a local devAuth copy), so never upload or delete it.
           aws s3 sync "$GITHUB_WORKSPACE/frontend/dist" "s3://${bucket}" --delete --exclude config.json
-          aws cloudfront create-invalidation --distribution-id "$distribution" --paths "/*"
-          echo "Deployed to $(terraform output -raw site_url)" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$distribution" ]; then
+            aws cloudfront create-invalidation --distribution-id "$distribution" --paths "/*"
+          else
+            echo "CloudFront off: skipped invalidation." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "Deployed. Site URL: $(terraform output -raw site_url), API: $(terraform output -raw api_endpoint)" >> "$GITHUB_STEP_SUMMARY"

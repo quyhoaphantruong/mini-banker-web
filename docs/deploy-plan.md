@@ -18,7 +18,7 @@ Legend: `[x]` done, `[ ]` to do, `[~]` in progress or partially done.
 - [x] Fix `.github/workflows/deploy.yml` (build step, backend-config, `TF_VAR_*` from the `dev` environment, apply saved plan)
 - [x] Deploy role trusts `repo:<repo>:environment:dev` (`infra/modules/github_oidc`)
 - [x] Fill in `infra/envs/dev/terraform.tfvars.example`
-- [ ] Add `lock_table_name = "bdsmini-tflock"` to `terraform.tfvars.example` (required variable, no default; Terraform will prompt without it)
+- [x] Add `lock_table_name = "bdsmini-tflock"` to `terraform.tfvars.example` (required variable, no default; Terraform will prompt without it)
 - [ ] `terraform fmt -recursive infra` and `terraform validate` in `infra/bootstrap` and `infra/envs/dev` (needs Terraform installed)
 - [~] Commit Phase 0: pushed directly to `main` as `ea4f9b3` (no PR); CI (`verify`, `e2e`) result pending
 - [ ] Commit `.claude/` (deploy-progress hook) if it should be shared
@@ -32,13 +32,13 @@ Known follow-ups (not blocking the first local apply):
 
 ## Phase 1: Local tooling and AWS account
 
-- [ ] Install tools: `winget install Hashicorp.Terraform Amazon.AWSCLI GitHub.cli`
-- [ ] AWS root account: MFA on, no root access keys, stop using root
+- [x] Install tools: `winget install Hashicorp.Terraform Amazon.AWSCLI GitHub.cli`
+- [x] AWS root account: MFA on, no root access keys, stop using root
 - [x] IAM user `mbd-admin` (console access, `AdministratorAccess`, MFA on). IAM Identity Center not available on this account, so plain IAM user
 - [x] CLI credentials for profile `mbd-admin`, region `ap-southeast-2`: `aws login --profile mbd-admin` if the CLI supports it, otherwise an access key via `aws configure --profile mbd-admin` (stored only in `~/.aws/credentials`)
 - [x] `aws sts get-caller-identity --profile mbd-admin` works
 - [ ] After Phase 2 one-off steps: deactivate/delete the `mbd-admin` access key (CI uses OIDC)
-- [ ] `gh auth login`
+- [x] `gh auth login`
 - [~] Grafana Cloud stack created (free tier); note stack URL and OTLP gateway URL. Skipped for now, observability is off
 
 ## Phase 2: Bootstrap and first apply (local, admin credentials)
@@ -59,41 +59,46 @@ Dev environment:
 - [x] `cd infra/envs/dev && cp terraform.tfvars.example terraform.tfvars` and fill it in (gitignored; Grafana values omitted, `enable_observability = false`)
 - [~] `export TF_VAR_grafana_service_account_token=glsa_...` (skipped, observability off)
 - [x] `terraform init -backend-config="bucket=<state_bucket_name>"`
-- [ ] `terraform apply`
-- [ ] Record outputs: `site_url` = `__________`, `github_deploy_role_arn` = `__________`
+- [x] `terraform apply`
+- [x] Re-apply with CloudFront off (`enable_cloudfront = false`, `github_auth_mode = "iam_user"`, both defaults); record outputs: `api_endpoint` = `https://o7ofj0h1wl.execute-api.ap-southeast-2.amazonaws.com`, `github_deploy_user_name` = `bdsmini-dev-github-deploy`, table `bdsmini-dev`, Cognito pool `ap-southeast-2_Q77pu9Mu4`, client `6fhii1hikkuv95pg32jbg8d32h`
 
 One-off setup:
 
 - [ ] Put the real OTLP token: `aws ssm put-parameter --name "$(terraform output -raw otlp_token_parameter_name)" --type SecureString --overwrite --value '<token>'`
-- [ ] Create banker user: `admin-create-user`, `admin-add-to-group --group-name banker`, `admin-set-user-password --permanent`
-- [ ] Seed: `SEED_ALLOW_AWS=1 TABLE_NAME=$(terraform output -raw table_name) AWS_REGION=ap-southeast-2 npm run seed -w seed`
-- [ ] First SPA upload: `aws s3 sync frontend/dist s3://<site_bucket> --exclude config.json`, then CloudFront invalidation
+- [x] Create banker user: `admin-create-user`, `admin-add-to-group --group-name banker`, `admin-set-user-password --permanent` (done 2026-11-13: user `quyhoaphantruong@gmail.com`, in `banker`, CONFIRMED)
+- [x] Seed: `SEED_ALLOW_AWS=1 TABLE_NAME=$(terraform output -raw table_name) AWS_REGION=ap-southeast-2 npm run seed -w seed`
+- [~] First SPA upload (skipped while CloudFront is off; the SPA runs locally with `npm run dev -w frontend` against the deployed API and Cognito)
 
 Smoke test:
 
-- [ ] Open `site_url`, log in through Cognito
-- [ ] Search CRN `100000001` (accounts and seven mandates show)
-- [ ] Cancel a mandate succeeds
-- [ ] CRN `100000004` shows not found
+- [x] Run the SPA locally (`site_url` is `http://localhost:5173`, `config.json` in the bucket holds the API URL), log in through Cognito
+- [x] Search CRN `100000001` (accounts and seven mandates show)
+- [x] Cancel a mandate succeeds
+- [x] CRN `100000004` shows not found
 - [~] (skipped while observability is off) Metrics/traces appear in Grafana Explore; check metric names match the dashboards
 
 ## Phase 3: GitHub setup
 
+Auth is the IAM user `bdsmini-dev-github-deploy` (access keys as GitHub secrets), not OIDC.
+
+- [x] Rework `deploy.yml` for IAM user keys: no `id-token`, no role; Grafana TF_VARs fall back to the Terraform defaults; CloudFront invalidation skipped when `distribution_id` is null
+- [x] Widen the deploy policy for `terraform plan` refresh (`ReadDeployIdentity`, `ReadUnscoped`, `lambda:Get*/List*`, object tagging); `validate` passes
+- [x] Apply the widened policy locally as `mbd-admin` (done 2026-11-13, also pushed the fixed `config.json` to the site bucket) (`terraform apply` in `infra/envs/dev`); the deploy user cannot change its own policy
+- [ ] Create the access key: `aws iam create-access-key --user-name bdsmini-dev-github-deploy --profile mbd-admin` (do not commit or paste it anywhere else)
 - [ ] Settings, Environments: create `dev`
 - [ ] (Optional) Required reviewer on `dev` so each deploy waits for approval
-- [ ] `dev` environment variables and secret:
+- [ ] `dev` environment variables and secrets:
 
 | Kind | Name | Value | Set |
 |---|---|---|---|
-| Variable | `AWS_DEPLOY_ROLE_ARN` | `terraform output -raw github_deploy_role_arn` | [ ] |
-| Variable | `TF_STATE_BUCKET` | bootstrap `state_bucket_name` | [ ] |
-| Variable | `ALERT_EMAIL` | alert email | [ ] |
-| Variable | `GRAFANA_URL` | `https://<stack>.grafana.net` | [ ] |
-| Variable | `GRAFANA_OTLP_ENDPOINT` | OTLP gateway URL | [ ] |
-| Secret | `GRAFANA_SERVICE_ACCOUNT_TOKEN` | `glsa_...` | [ ] |
+| Secret | `AWS_ACCESS_KEY_ID` | deploy user access key id | [ ] |
+| Secret | `AWS_SECRET_ACCESS_KEY` | deploy user secret key | [ ] |
+| Variable | `TF_STATE_BUCKET` | `bdsmini-tfstate-070404529867` | [ ] |
+| Variable (optional) | `ALERT_EMAIL` | alert email (only used with observability) | [ ] |
 | Variable (optional) | `TF_LOCK_TABLE` | only if not `bdsmini-tflock` | [ ] |
+| Later, observability | `ENABLE_OBSERVABILITY`, `GRAFANA_URL`, `GRAFANA_OTLP_ENDPOINT`, secret `GRAFANA_SERVICE_ACCOUNT_TOKEN` | not needed now | n/a |
 
-- [ ] Settings, Branches: protect `main` (require PR, require checks `verify` and `e2e`)
+- [ ] Settings, Branches: protect `main` (require PR, require checks `verify` and `e2e`). Note: blocks direct pushes to `main`; branch protection on a private repo needs a paid plan
 
 ## Phase 4: Deploy through CI
 
@@ -126,3 +131,13 @@ Smoke test:
 | 2026-11-13 | Bootstrap re-applied in `ap-southeast-2` (same bucket and lock table names). `prevent_destroy` restored to `true`. Next: build, then `envs/dev` init with `-backend-config="bucket=bdsmini-tfstate-070404529867"` and plan |
 | 2026-11-13 | `envs/dev` init against the S3 backend OK; `terraform plan` = 47 to add, 0 to change, 0 to destroy (API Gateway, Cognito, DynamoDB, GitHub OIDC role, 3 Lambdas, CloudFront and site bucket). Not applied yet |
 | 2026-11-13 | First `envs/dev` apply partly done (API Gateway, Lambdas, DynamoDB, Cognito pool, site S3 bucket exist). Two blockers: (1) SCP `p-1eg8j44r` denies `iam:CreateOpenIDConnectProvider`, so the GitHub OIDC provider and deploy role cannot be created; (2) CloudFront `CreateDistribution` denied: account must be verified by AWS Support. Cognito app client and API routes not yet created (depend on CloudFront URL) |
+| 2026-11-13 | Architecture change: CloudFront and the GitHub OIDC provider are blocked, so both are now optional. `enable_cloudfront` (default false) in `static_site`: SPA runs locally, API called directly, API CORS allows `local_dev_origin`. `github_auth_mode` (default `iam_user`) in `github_oidc`: IAM user instead of OIDC role; create its access key by hand (not in state) and store as GitHub secrets. `validate` passes. Not applied yet. `deploy.yml` still assumes an OIDC role: needs rework for access-key secrets |
+| 2026-11-13 | Apply of the IAM user hit `LimitExceeded: Maximum policy size of 2048 bytes` (inline user policy cap). Switched the deploy policy to a managed `aws_iam_policy` attached to the user (6144 byte cap). `validate` passes; re-apply needed |
+| 2026-11-13 | `envs/dev` apply completed with CloudFront off and IAM user auth (API, Cognito client, Lambdas, DynamoDB `bdsmini-dev`, site bucket, deploy user). Next: banker user, seed (TABLE_NAME=bdsmini-dev), run SPA locally, smoke test |
+| 2026-11-13 | Local SPA showed "System not available": `parseConfig` requires `oidc.postLogoutRedirectUri`, which the Terraform-generated `config.json` lacked. Added it in `modules/static_site` (re-apply to update the S3 copy) and in the local `frontend/public/config.json` |
+| 2026-11-13 | Banker user created in the Cognito pool (`admin-create-user`, added to `banker`, permanent password set; status CONFIRMED). Next: seed (TABLE_NAME=bdsmini-dev), run SPA locally, smoke test |
+| 2026-11-13 | Browser CORS error on `/launch` was really a 404: routes live under `/api/*` but `apiBaseUrl` (CloudFront off) was the bare API endpoint. Fixed `api_base` in `modules/static_site` to `<endpoint>/api` and in local `frontend/public/config.json`. Re-apply to update the S3 copy |
+| 2026-11-13 | Seed and local smoke test confirmed done by user: Cognito login, CRN `100000001` search, mandate cancel, CRN `100000004` not found |
+| 2026-11-13 | Phase 3 started. Decision: IAM user keys only (OIDC blocked by SCP). `deploy.yml` reworked (access-key secrets, Grafana defaults, CloudFront-optional publish). Deploy policy widened with refresh reads; `validate` passes, local apply pending. `gh` not authenticated in Claude's shell, so GitHub settings are done by the user |
+| 2026-11-13 | Local `terraform plan` for the policy change failed: STS `InvalidClientTokenId` for profile `mbd-admin` (`aws sts get-caller-identity` fails too). The access key in `~/.aws/credentials` is deactivated or deleted; needs a new key before the apply |
+| 2026-11-13 | User replaced the `mbd-admin` key. `envs/dev` apply: 0 added, 2 changed, 0 destroyed (deploy policy widened; S3 `config.json` now has `/api` base and `postLogoutRedirectUri`). Next: create deploy user access key, GitHub `dev` environment, secrets and `TF_STATE_BUCKET` |

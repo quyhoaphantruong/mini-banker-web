@@ -113,12 +113,16 @@ module "api" {
   throttling_rate_limit  = var.api_throttling_rate_limit
   throttling_burst_limit = var.api_throttling_burst_limit
   enable_access_logs     = var.enable_api_access_log
+  cors_allow_origins     = var.enable_cloudfront ? [] : [var.local_dev_origin]
 }
 
 module "static_site" {
   source                = "../../modules/static_site"
   name_prefix           = var.name_prefix
   region                = var.region
+  enable_cloudfront     = var.enable_cloudfront
+  local_origin          = var.local_dev_origin
+  api_endpoint          = module.api.api_endpoint
   api_domain_name       = module.api.api_domain_name
   oidc_authority        = module.cognito.issuer_url
   oidc_client_id        = module.cognito.client_id
@@ -131,6 +135,7 @@ module "github_oidc" {
   source               = "../../modules/github_oidc"
   name_prefix          = var.name_prefix
   github_repository    = var.github_repository
+  auth_mode            = var.github_auth_mode
   create_oidc_provider = var.create_github_oidc_provider
   state_bucket_arn     = local.state_bucket_arn
   lock_table_arn       = local.lock_table_arn

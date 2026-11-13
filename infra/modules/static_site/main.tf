@@ -2,6 +2,22 @@ variable "name_prefix" {
   type = string
 }
 
+variable "enable_cloudfront" {
+  type    = bool
+  default = false
+}
+
+variable "local_origin" {
+  type        = string
+  default     = "http://localhost:5173"
+  description = "Where the SPA runs when CloudFront is off."
+}
+
+variable "api_endpoint" {
+  type        = string
+  description = "Full API URL, used as apiBaseUrl when CloudFront is off."
+}
+
 variable "api_domain_name" {
   type = string
 }
@@ -47,22 +63,27 @@ variable "acm_certificate_arn" {
 data "aws_caller_identity" "current" {}
 
 data "aws_cloudfront_cache_policy" "optimized" {
+  count = var.enable_cloudfront ? 1 : 0
   name = "Managed-CachingOptimized"
 }
 
 data "aws_cloudfront_cache_policy" "disabled" {
+  count = var.enable_cloudfront ? 1 : 0
   name = "Managed-CachingDisabled"
 }
 
 # AllViewer forwards Authorization. The Host header is excluded because API Gateway rejects a foreign Host.
 data "aws_cloudfront_origin_request_policy" "all_viewer_except_host" {
+  count = var.enable_cloudfront ? 1 : 0
   name = "Managed-AllViewerExceptHostHeader"
 }
 
 locals {
   site_origin_id = "site"
   api_origin_id  = "api"
-  site_url       = var.custom_domain != null ? "https://${var.custom_domain}" : "https://${aws_cloudfront_distribution.this.domain_name}"
+  # Without CloudFront the SPA is not hosted in AWS: it runs from var.local_origin and calls the API directly.
+  site_url = !var.enable_cloudfront ? var.local_origin : (var.custom_domain != null ? "https://${var.custom_domain}" : "https://${aws_cloudfront_distribution.this[0].domain_name}")
+  api_base = var.enable_cloudfront ? "/api" : "${var.api_endpoint}/api"
 }
 
 resource "aws_s3_bucket" "site" {
@@ -89,6 +110,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "site" {
 }
 
 resource "aws_cloudfront_origin_access_control" "site" {
+  count = var.enable_cloudfront ? 1 : 0
   name                              = "${var.name_prefix}-site"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -98,6 +120,7 @@ resource "aws_cloudfront_origin_access_control" "site" {
 # Client-side routes have no object in S3. Rewriting them here, instead of mapping 403/404 to index.html
 # with custom_error_response, keeps API 403/404 responses (forbidden, customer not found) intact.
 resource "aws_cloudfront_function" "spa_rewrite" {
+  count = var.enable_cloudfront ? 1 : 0
   name    = "${var.name_prefix}-spa-rewrite"
   runtime = "cloudfront-js-2.0"
   publish = true
@@ -114,6 +137,7 @@ EOT
 }
 
 resource "aws_cloudfront_response_headers_policy" "security" {
+  count = var.enable_cloudfront ? 1 : 0
   name = "${var.name_prefix}-security"
 
   security_headers_config {
@@ -160,6 +184,7 @@ resource "aws_cloudfront_response_headers_policy" "security" {
 }
 
 resource "aws_cloudfront_distribution" "this" {
+  count = var.enable_cloudfront ? 1 : 0
   enabled             = true
   comment             = "${var.name_prefix} SPA and API"
   default_root_object = "index.html"
@@ -170,7 +195,7 @@ resource "aws_cloudfront_distribution" "this" {
   origin {
     origin_id                = local.site_origin_id
     domain_name              = aws_s3_bucket.site.bucket_regional_domain_name
-    origin_access_control_id = aws_cloudfront_origin_access_control.site.id
+    origin_access_control_id = aws_cloudfront_origin_access_control.site[0].id
   }
 
   origin {
@@ -191,12 +216,12 @@ resource "aws_cloudfront_distribution" "this" {
     allowed_methods            = ["GET", "HEAD", "OPTIONS"]
     cached_methods             = ["GET", "HEAD"]
     compress                   = true
-    cache_policy_id            = data.aws_cloudfront_cache_policy.optimized.id
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    cache_policy_id            = data.aws_cloudfront_cache_policy.optimized[0].id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security[0].id
 
     function_association {
       event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.spa_rewrite.arn
+      function_arn = aws_cloudfront_function.spa_rewrite[0].arn
     }
   }
 
@@ -207,9 +232,9 @@ resource "aws_cloudfront_distribution" "this" {
     allowed_methods            = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods             = ["GET", "HEAD"]
     compress                   = true
-    cache_policy_id            = data.aws_cloudfront_cache_policy.disabled.id
-    origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.all_viewer_except_host.id
-    response_headers_policy_id = aws_cloudfront_response_headers_policy.security.id
+    cache_policy_id            = data.aws_cloudfront_cache_policy.disabled[0].id
+    origin_request_policy_id   = data.aws_cloudfront_origin_request_policy.all_viewer_except_host[0].id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.security[0].id
   }
 
   restrictions {
@@ -227,6 +252,8 @@ resource "aws_cloudfront_distribution" "this" {
 }
 
 data "aws_iam_policy_document" "site_bucket" {
+  count = var.enable_cloudfront ? 1 : 0
+
   statement {
     actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.site.arn}/*"]
@@ -239,14 +266,15 @@ data "aws_iam_policy_document" "site_bucket" {
     condition {
       test     = "StringEquals"
       variable = "AWS:SourceArn"
-      values   = [aws_cloudfront_distribution.this.arn]
+      values   = [aws_cloudfront_distribution.this[0].arn]
     }
   }
 }
 
 resource "aws_s3_bucket_policy" "site" {
+  count  = var.enable_cloudfront ? 1 : 0
   bucket = aws_s3_bucket.site.id
-  policy = data.aws_iam_policy_document.site_bucket.json
+  policy = data.aws_iam_policy_document.site_bucket[0].json
   depends_on = [ aws_s3_bucket_public_access_block.site ]
 }
 
@@ -257,12 +285,13 @@ resource "aws_s3_object" "config" {
   cache_control = "no-cache"
 
   content = jsonencode({
-    apiBaseUrl = "/api"
+    apiBaseUrl = local.api_base
     devAuth    = false
     oidc = {
       authority   = var.oidc_authority
       clientId    = var.oidc_client_id
       redirectUri = "${local.site_url}/"
+      postLogoutRedirectUri = "${local.site_url}/"
       scope       = var.oidc_scope
     }
   })
@@ -277,15 +306,15 @@ output "bucket_arn" {
 }
 
 output "distribution_id" {
-  value = aws_cloudfront_distribution.this.id
+  value = var.enable_cloudfront ? aws_cloudfront_distribution.this[0].id : null
 }
 
 output "distribution_arn" {
-  value = aws_cloudfront_distribution.this.arn
+  value = var.enable_cloudfront ? aws_cloudfront_distribution.this[0].arn : null
 }
 
 output "domain_name" {
-  value = aws_cloudfront_distribution.this.domain_name
+  value = var.enable_cloudfront ? aws_cloudfront_distribution.this[0].domain_name : null
 }
 
 output "site_url" {
