@@ -117,7 +117,7 @@ AWS Support enabled CloudFront on the account (`aws cloudfront list-distribution
 - [x] Local apply as `mbd-admin` in `infra/envs/dev` (the deploy user cannot create these): `terraform plan` then `terraform apply` (distribution takes 5-15 min; Cognito callback/logout URLs, `config.json` and API CORS change)
 - [x] Upload the SPA: `aws s3 sync frontend/dist s3://bdsmini-dev-site-070404529867 --delete --exclude config.json --profile mbd-admin` (or let Deploy do it)
 - [x] Open the `site_url` output (`https://...cloudfront.net`), log in, repeat the smoke test (`100000001`, cancel a mandate, `100000004`)
-- [ ] Check the post-merge Deploy run; widen the deploy policy if CI hits AccessDenied on CloudFront reads or `cloudfront:CreateInvalidation`; apply locally
+- [x] Check the post-merge Deploy run; widen the deploy policy if CI hits AccessDenied on CloudFront reads or `cloudfront:CreateInvalidation`; apply locally
 
 ## Teardown and cost
 
@@ -159,3 +159,4 @@ AWS Support enabled CloudFront on the account (`aws cloudfront list-distribution
 | 2026-11-13 | AWS Support enabled CloudFront. Branch `cloudfront-default-on` flips `enable_cloudfront` default to true and adds Phase 5. Local apply and SPA upload pending |
 | 2026-11-13 | CloudFront live: local apply 5 added, 7 changed, 0 destroyed; `site_url` `https://d21tuarzeokcq6.cloudfront.net`, `distribution_id` `E1YZFWYC02AYQ3`. SPA synced to the site bucket (only `index.html` differed). Smoke test on the CloudFront URL passed. PR #2 merged: `enable_cloudfront` defaults to true |
 | 2026-11-13 | Post-merge Deploy failed at plan refresh: deploy user lacked `cloudfront:GetOriginAccessControl` (AccessDenied). Branch `cloudfront-deploy-perms` adds OAC read/update, distribution tag and config actions to the deploy policy; needs a local apply as `mbd-admin`, then re-run Deploy |
+| 2026-11-13 | Chicken-and-egg: Deploy plan refresh needed `cloudfront:GetOriginAccessControl`, which the deploy user lacked, and the deploy user cannot change its own policy. PR #3 added OAC and distribution tag actions; user applied locally as `mbd-admin` (0 added, 1 changed, 0 destroyed) after one transient state-lock error (no stale lock found). Re-run Deploy is green. **Deployment complete**: SPA on CloudFront, CI deploys every merge. Story of the problems: `docs/deploy-story.md` |
