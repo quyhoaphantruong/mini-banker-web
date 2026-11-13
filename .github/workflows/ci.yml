@@ -42,7 +42,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: docker compose up -d dynamodb-local
+      # Playwright starts dynamodb-local, the backend and the frontend itself (e2e/playwright.config.ts).
       - run: npx playwright install --with-deps chromium
         working-directory: e2e
       - run: npm test -w e2e
