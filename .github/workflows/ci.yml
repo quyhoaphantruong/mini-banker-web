@@ -25,8 +25,9 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
-      # The seed tests start their own dynamodb local container; the runner has Docker
-      - run: npm test
+      # The seed tests start their own dynamodb local container; the runner has Docker.
+      # e2e is excluded here: it needs Playwright browsers and runs in the e2e job below.
+      - run: npm test -w shared -w backend -w frontend -w seed --if-present
       - run: npm run build
 
   e2e:
