@@ -175,6 +175,20 @@ export function createRepository(db: Db): Repository {
                     ":next": plan.nextVersion,
                     ":expected": plan.expectedVersion,
                     ":at": plan.updatedAt,
+                  },
+                },
+              },
+              {
+                Update: {
+                  TableName: tableName,
+                  Key: plan.summaryKey,
+                  UpdateExpression:
+                    "SET #status = :to, GSI2PK = :gsi2pk, GSI2SK = :gsi2sk",
+                  ConditionExpression: "attribute_exists(PK)",
+                  ExpressionAttributeNames: { "#status": "status" },
+                  ExpressionAttributeValues: {
+                    ":to": plan.toStatus,
+                    ":gsi2pk": plan.summaryGsi2.GSI2PK,
                     ":gsi2sk": plan.summaryGsi2.GSI2SK,
                   },
                 },
