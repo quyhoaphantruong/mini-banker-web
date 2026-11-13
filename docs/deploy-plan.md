@@ -19,8 +19,8 @@ Legend: `[x]` done, `[ ]` to do, `[~]` in progress or partially done.
 - [x] Deploy role trusts `repo:<repo>:environment:dev` (`infra/modules/github_oidc`)
 - [x] Fill in `infra/envs/dev/terraform.tfvars.example`
 - [x] Add `lock_table_name = "bdsmini-tflock"` to `terraform.tfvars.example` (required variable, no default; Terraform will prompt without it)
-- [ ] `terraform fmt -recursive infra` and `terraform validate` in `infra/bootstrap` and `infra/envs/dev` (needs Terraform installed)
-- [~] Commit Phase 0: pushed directly to `main` as `ea4f9b3` (no PR); CI (`verify`, `e2e`) result pending
+- [x] `terraform fmt -recursive infra` (done, user confirmed) and `terraform validate` in `infra/bootstrap` and `infra/envs/dev` (needs Terraform installed)
+- [x] Commit Phase 0: pushed directly to `main` as `ea4f9b3` (no PR); CI now green
 - [ ] Commit `.claude/` (deploy-progress hook) if it should be shared
 
 Known follow-ups (not blocking the first local apply):
@@ -84,30 +84,40 @@ Auth is the IAM user `bdsmini-dev-github-deploy` (access keys as GitHub secrets)
 - [x] Rework `deploy.yml` for IAM user keys: no `id-token`, no role; Grafana TF_VARs fall back to the Terraform defaults; CloudFront invalidation skipped when `distribution_id` is null
 - [x] Widen the deploy policy for `terraform plan` refresh (`ReadDeployIdentity`, `ReadUnscoped`, `lambda:Get*/List*`, object tagging); `validate` passes
 - [x] Apply the widened policy locally as `mbd-admin` (done 2026-11-13, also pushed the fixed `config.json` to the site bucket) (`terraform apply` in `infra/envs/dev`); the deploy user cannot change its own policy
-- [ ] Create the access key: `aws iam create-access-key --user-name bdsmini-dev-github-deploy --profile mbd-admin` (do not commit or paste it anywhere else)
-- [ ] Settings, Environments: create `dev`
+- [x] Create the access key: `aws iam create-access-key --user-name bdsmini-dev-github-deploy --profile mbd-admin` (do not commit or paste it anywhere else)
+- [x] Settings, Environments: create `dev`
 - [ ] (Optional) Required reviewer on `dev` so each deploy waits for approval
 - [ ] `dev` environment variables and secrets:
 
 | Kind | Name | Value | Set |
 |---|---|---|---|
-| Secret | `AWS_ACCESS_KEY_ID` | deploy user access key id | [ ] |
-| Secret | `AWS_SECRET_ACCESS_KEY` | deploy user secret key | [ ] |
-| Variable | `TF_STATE_BUCKET` | `bdsmini-tfstate-070404529867` | [ ] |
+| Secret | `AWS_ACCESS_KEY_ID` | deploy user access key id | [x] |
+| Secret | `AWS_SECRET_ACCESS_KEY` | deploy user secret key | [x] |
+| Variable | `TF_STATE_BUCKET` | `bdsmini-tfstate-070404529867` | [x] |
 | Variable (optional) | `ALERT_EMAIL` | alert email (only used with observability) | [ ] |
 | Variable (optional) | `TF_LOCK_TABLE` | only if not `bdsmini-tflock` | [ ] |
 | Later, observability | `ENABLE_OBSERVABILITY`, `GRAFANA_URL`, `GRAFANA_OTLP_ENDPOINT`, secret `GRAFANA_SERVICE_ACCOUNT_TOKEN` | not needed now | n/a |
 
-- [ ] Settings, Branches: protect `main` (require PR, require checks `verify` and `e2e`). Note: blocks direct pushes to `main`; branch protection on a private repo needs a paid plan
+- [x] Settings, Branches: protect `main` (require PR, require checks `verify` and `e2e`). Note: blocks direct pushes to `main`; branch protection on a private repo needs a paid plan
 
 ## Phase 4: Deploy through CI
 
-- [ ] Merge the Phase 0 PR into `main`
-- [ ] CI passes, then `Deploy` starts via `workflow_run`
-- [ ] Deploy run: plan shows no unexpected changes (infra already exists from the local apply)
+- [x] Merge the Phase 0 PR into `main` (moot: pushed directly, see Phase 0)
+- [x] CI passes, then `Deploy` starts via `workflow_run` (CI run 43403950694, Deploy run 43404228754, both success)
+- [x] Deploy run: plan shows no unexpected changes (run succeeded; plan contents not reviewed) (infra already exists from the local apply)
 - [ ] If AccessDenied: widen the deploy role (Phase 0 follow-up), apply locally, re-run
-- [ ] Site still works after the CI deploy (repeat the smoke test)
+- [x] Site still works after the CI deploy (smoke test passed, user confirmed)
 - [ ] Every merge to `main` now deploys
+
+## Phase 5: CloudFront
+
+AWS Support enabled CloudFront on the account (`aws cloudfront list-distributions` returns an empty list, no error). `enable_cloudfront` now defaults to `true` so CI applies do not tear the distribution down.
+
+- [ ] Merge the PR that flips the default (branch protection requires a PR)
+- [ ] Local apply as `mbd-admin` in `infra/envs/dev` (the deploy user cannot create these): `terraform plan` then `terraform apply` (distribution takes 5-15 min; Cognito callback/logout URLs, `config.json` and API CORS change)
+- [ ] Upload the SPA: `aws s3 sync frontend/dist s3://bdsmini-dev-site-070404529867 --delete --exclude config.json --profile mbd-admin` (or let Deploy do it)
+- [ ] Open the `site_url` output (`https://...cloudfront.net`), log in, repeat the smoke test (`100000001`, cancel a mandate, `100000004`)
+- [ ] Widen the deploy policy if CI hits AccessDenied on CloudFront reads or `cloudfront:CreateInvalidation`; apply locally
 
 ## Teardown and cost
 
@@ -141,3 +151,9 @@ Auth is the IAM user `bdsmini-dev-github-deploy` (access keys as GitHub secrets)
 | 2026-11-13 | Phase 3 started. Decision: IAM user keys only (OIDC blocked by SCP). `deploy.yml` reworked (access-key secrets, Grafana defaults, CloudFront-optional publish). Deploy policy widened with refresh reads; `validate` passes, local apply pending. `gh` not authenticated in Claude's shell, so GitHub settings are done by the user |
 | 2026-11-13 | Local `terraform plan` for the policy change failed: STS `InvalidClientTokenId` for profile `mbd-admin` (`aws sts get-caller-identity` fails too). The access key in `~/.aws/credentials` is deactivated or deleted; needs a new key before the apply |
 | 2026-11-13 | User replaced the `mbd-admin` key. `envs/dev` apply: 0 added, 2 changed, 0 destroyed (deploy policy widened; S3 `config.json` now has `/api` base and `postLogoutRedirectUri`). Next: create deploy user access key, GitHub `dev` environment, secrets and `TF_STATE_BUCKET` |
+| 2026-11-13 | CI failed on e2e cancel tests: cancel transaction passed unused `:gsi2sk` (DynamoDB ValidationException) and never updated the customer summary row. Fixed in `18612fa` (separate summary Update). CI and Deploy (run 43404228754) both green. Next: confirm deploy user key/secrets state, site smoke test, branch protection |
+| 2026-11-13 | User confirmed CI passed on `18612fa`. Phase 4 "CI passes, Deploy starts" stays ticked. Phase 3 secrets and `dev` environment boxes left as-is until the user confirms them (a green Deploy implies the keys exist, but that is not verified here) |
+| 2026-11-13 | User confirmed: `dev` environment, deploy user key, secrets and `TF_STATE_BUCKET` set via gh CLI; smoke test after CI deploy passed. Remaining: review deploy plan output, branch protection, deactivate `mbd-admin` key (optional), budget email, `terraform fmt` |
+| 2026-11-13 | Deploy apply via CI succeeded: 0 added, 3 changed, 0 destroyed (outputs unchanged; the three Lambdas). Skipped for now: deactivating the `mbd-admin` key |
+| 2026-11-13 | User protected `main` and ran `terraform fmt`. AWS User Notifications verification email received; user to click Verify email (expires in 12h) and tick the Budgets subscription item once confirmed |
+| 2026-11-13 | AWS Support enabled CloudFront. Branch `cloudfront-default-on` flips `enable_cloudfront` default to true and adds Phase 5. Local apply and SPA upload pending |
