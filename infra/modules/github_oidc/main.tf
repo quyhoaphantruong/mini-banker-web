@@ -143,7 +143,7 @@ data "aws_iam_policy_document" "deploy" {
 
     content {
       sid       = "InvalidateSiteCache"
-      actions   = ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation", "cloudfront:GetDistribution", "cloudfront:UpdateDistribution"]
+      actions   = ["cloudfront:CreateInvalidation", "cloudfront:GetInvalidation", "cloudfront:GetDistribution", "cloudfront:GetDistributionConfig", "cloudfront:UpdateDistribution", "cloudfront:ListTagsForResource", "cloudfront:TagResource", "cloudfront:UntagResource"]
       resources = [var.distribution_arn]
     }
   }
@@ -209,6 +209,12 @@ data "aws_iam_policy_document" "deploy" {
     sid       = "ManageCloudFrontPolicies"
     actions   = ["cloudfront:Get*", "cloudfront:List*", "cloudfront:DescribeFunction", "cloudfront:UpdateFunction", "cloudfront:CreateFunction"]
     resources = ["arn:aws:cloudfront::${local.account_id}:function/${var.name_prefix}-*", "arn:aws:cloudfront::${local.account_id}:response-headers-policy/*"]
+  }
+
+  statement {
+    sid       = "ManageOriginAccessControl"
+    actions   = ["cloudfront:GetOriginAccessControl", "cloudfront:GetOriginAccessControlConfig", "cloudfront:UpdateOriginAccessControl", "cloudfront:ListOriginAccessControls"]
+    resources = ["arn:aws:cloudfront::${local.account_id}:origin-access-control/*"]
   }
 
   statement {
