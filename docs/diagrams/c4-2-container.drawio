@@ -34,7 +34,7 @@
                 <mxCell id="cog" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1168BD;fontColor=#FFFFFF;strokeColor=#0B4884;" value="&lt;b&gt;Cognito&lt;/b&gt;&lt;br&gt;[User pool, hosted domain, SPA client, banker group]&lt;br&gt;Banker sign-in" vertex="1">
                     <mxGeometry height="110" width="240" x="560" y="720" as="geometry"/>
                 </mxCell>
-                <mxCell id="obs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;fontColor=#FFFFFF;strokeColor=#6B6B6B;" value="&lt;b&gt;Observability&lt;/b&gt;&lt;br&gt;[Grafana Cloud via OTLP/HTTP; CloudWatch logs]&lt;br&gt;RED and business dashboards, alerts" vertex="1">
+                <mxCell id="obs" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;fontColor=#FFFFFF;strokeColor=#6B6B6B;" value="&lt;b&gt;Observability&lt;/b&gt;&lt;br&gt;[CloudWatch Logs, Metrics, Alarms; X-Ray]&lt;br&gt;Dashboard, alarms to SNS email" vertex="1">
                     <mxGeometry height="130" width="200" x="1420" y="380" as="geometry"/>
                 </mxCell>
                 <mxCell id="lg" parent="1" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#FFFFFF;strokeColor=#444444;" value="&lt;b&gt;Legend&lt;/b&gt;&lt;br&gt;Blue: container in system&lt;br&gt;Dark blue: person&lt;br&gt;Grey: external service&lt;br&gt;Dashed box: system boundary&lt;br&gt;Arrows: caller to callee, labelled with protocol" vertex="1">
@@ -73,13 +73,13 @@
                 <mxCell id="e11" edge="1" parent="1" source="l3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;" target="db" value="Reads; cancel via TransactWriteItems [AWS SDK]">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e12" edge="1" parent="1" source="l1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;dashed=1;" target="obs" value="Telemetry [OTLP/HTTP]">
+                <mxCell id="e12" edge="1" parent="1" source="l1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;dashed=1;" target="obs" value="Telemetry [EMF logs, X-Ray]">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e13" edge="1" parent="1" source="l2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;dashed=1;" target="obs" value="Telemetry [OTLP/HTTP]">
+                <mxCell id="e13" edge="1" parent="1" source="l2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;dashed=1;" target="obs" value="Telemetry [EMF logs, X-Ray]">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="e14" edge="1" parent="1" source="l3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;dashed=1;" target="obs" value="Telemetry [OTLP/HTTP]">
+                <mxCell id="e14" edge="1" parent="1" source="l3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=11;dashed=1;" target="obs" value="Telemetry [EMF logs, X-Ray]">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
             </root>
