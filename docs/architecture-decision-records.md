@@ -20,14 +20,10 @@ What is the disadvantage of this approach ?
 
 ## Why DynamoDB
 
-The app stores customers, accounts, mandates and audit records in one DynamoDB table (`bdsmini`).
-
-1. The questions the app asks are known up front: find a customer by CRN, list their accounts and mandates, find an account, cancel a mandate. DynamoDB works best when you design the table around known questions, and here we can.
-2. It fits Lambda. There are no connections to manage and no servers to patch, and it scales to zero cost when idle. It bills per request, so a pet project costs almost nothing.
-3. It gives the guarantees a banking flow needs. Cancelling a mandate is one transaction that changes the mandate and writes the audit record together, so both happen or neither does. A TTL on idempotency keys makes a double-click safe and cleans up after itself.
-4. It is a good thing to learn. Single-table design, secondary indexes and transactions are the core DynamoDB skills.
+1. It fits Lambda. There are no connections to manage and no servers to patch, and it scales to zero cost when idle. It bills per request, so a pet project costs almost nothing.
+2. It gives ACID gurantees. Cancelling a mandate is one transaction and writes the audit record together, so both happen or neither does. A TTL on idempotency keys makes a double-click safe and cleans up after itself.
+3. Simple to setup.
 
 What is the disadvantage of this approach ?
 1. You must know your access patterns before you build. A new kind of question can mean a new index or a data migration, where SQL would just need a new query.
 2. No joins and no ad-hoc reporting. Anything beyond the planned lookups is hard.
-3. Single-table keys are harder to read than normal tables, so the key building lives in one place (`shared/src/keys.ts`) to keep it manageable.
