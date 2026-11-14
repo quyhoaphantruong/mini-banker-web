@@ -1,12 +1,11 @@
-import type { Instruments } from "../telemetry/index.js";
-import type { Telemetry } from "../telemetry/index.js";
+import type { Instruments, Telemetry } from "../telemetry/index.js";
 import type { AuditLine } from "../domain/audit.js";
 import type { Repository } from "../repo/repository.js";
 import type { AppConfig } from "../config.js";
 
 export interface Deps {
   repo: Repository;
-  telemetry: () => Promise<Telemetry>;
+  telemetry: () => Telemetry;
   config: Pick<AppConfig, "simulateSearch500Crn">;
   audit: (line: AuditLine) => void;
   now: () => Date;

@@ -3,7 +3,7 @@ import { TEST_IDS } from "@mbd/shared";
 export function LoginScreen({ onLogin }: { onLogin: () => void }) {
   return (
     <main className="center-screen">
-      <h1>Mini Banker Desktop</h1>
+      <h1>Mini Banker Web</h1>
       <p>Sign in with your bank account to continue.</p>
       <button
         type="button"
@@ -22,7 +22,7 @@ export function NotAuthorisedScreen({ onSignOut }: { onSignOut: () => void }) {
     <main className="center-screen" data-testid={TEST_IDS.notAuthorised}>
       <h1>Authorised users only</h1>
       <p>
-        Your account is not entitled to use Banker Desktop. Ask your
+        Your account is not entitled to use Mini Banker Web. Ask your
         administrator to add you to the banker group.
       </p>
       <button type="button" className="btn" onClick={onSignOut}>
@@ -38,7 +38,7 @@ export function SystemUnavailableScreen({ onRetry }: { onRetry: () => void }) {
     <main className="center-screen center-screen-warn" role="alert">
       <h1>System not available</h1>
       <p>
-        We could not reach Banker Desktop. This is usually temporary. Please try
+        We could not reach Mini Banker Web. This is usually temporary. Please try
         again.
       </p>
       <button type="button" className="btn btn-primary" onClick={onRetry}>

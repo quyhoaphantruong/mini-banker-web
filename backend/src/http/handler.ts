@@ -1,8 +1,3 @@
-import {
-  SpanKind,
-  SpanStatusCode,
-  isSpanContextValid,
-} from "@opentelemetry/api";
 import type { ErrorBody } from "@mbd/shared";
 import type {
   APIGatewayProxyEventV2WithJWTAuthorizer,
@@ -45,19 +40,12 @@ export function createHandler(routes: RouteDef[], deps: Deps) {
   ): Promise<APIGatewayProxyStructuredResultV2> => {
     const startedAt = performance.now();
     const requestId = event.requestContext.requestId;
-    const telemetry = await deps.telemetry();
+    const telemetry = deps.telemetry();
     const match = matchRoute(routes, event);
     const method = event.requestContext.http.method.toUpperCase();
     const route = match ? routeLabel(match.def) : "unmatched";
-
-    const span = telemetry.tracer.startSpan(`${method} ${route}`, {
-      kind: SpanKind.SERVER,
-      attributes: { "http.method": method, "http.route": route },
-    });
-    const spanContext = span.spanContext();
-    const traceId = isSpanContextValid(spanContext)
-      ? spanContext.traceId
-      : null;
+    // The invocation's X-Ray segment is created by Lambda active tracing.
+    const traceId = telemetry.traceId();
 
     let result: HttpResult;
     try {
@@ -90,9 +78,6 @@ export function createHandler(routes: RouteDef[], deps: Deps) {
             message,
           }),
         );
-        span.recordException(
-          error instanceof Error ? error : new Error(String(error)),
-        );
         result = errorResult(
           new HttpError(500, "INTERNAL", "Unexpected error"),
           requestId,
@@ -100,18 +85,10 @@ export function createHandler(routes: RouteDef[], deps: Deps) {
       }
     }
 
-    const status = String(result.statusCode);
-    span.setAttribute("http.status_code", result.statusCode);
-    if (result.statusCode >= 500)
-      span.setStatus({ code: SpanStatusCode.ERROR });
-    span.end();
-
     telemetry.instruments.httpDuration.record(performance.now() - startedAt, {
       "http.route": route,
-      "http.status_code": status,
-      "http.method": method,
+      "http.status_code": String(result.statusCode),
     });
-    await telemetry.flush();
 
     return {
       statusCode: result.statusCode,

@@ -1,11 +1,25 @@
-import { metrics, trace, type Counter, type Histogram, type Tracer} from "@opentelemetry/api";
-import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
-import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import { MeterProvider, PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
-import { BatchSpanProcessor, TracerProvider } from "@opentelemetry/sdk-trace";
-import { v7 as uuidv7 } from "uuid";
+/**
+ * CloudWatch-only telemetry.
+ *
+ * Metrics are written as CloudWatch Embedded Metric Format (EMF) log lines. Lambda ships stdout to
+ * CloudWatch Logs, which extracts the metrics asynchronously: no SDK, no exporter, no flush, no IAM
+ * beyond the log permissions the function already has. Traces come from Lambda active tracing
+ * (X-Ray); the handler only reads the trace id so log lines can be joined to the trace.
+ *
+ * Outside Lambda (local dev, tests) the metrics are no-ops unless `EMF_ENABLED=1`.
+ */
+
+export const METRIC_NAMESPACE = "MiniBankerDesktop";
+
+export type MetricAttributes = Record<string, string>;
+
+export interface Histogram {
+  record(value: number, attributes?: MetricAttributes): void;
+}
+
+export interface Counter {
+  add(value: number, attributes?: MetricAttributes): void;
+}
 
 export interface Instruments {
   httpDuration: Histogram;
@@ -14,106 +28,92 @@ export interface Instruments {
 }
 
 export interface Telemetry {
-  tracer: Tracer;
   instruments: Instruments;
-  flush(): Promise<void>;
+  /** X-Ray trace id of the current invocation (`1-xxxxxxxx-...`), or null when not traced. */
+  traceId(): string | null;
 }
 
-export type AuthHeaderLoader = (parameterName: string) => Promise<string>;
+type Unit = "Milliseconds" | "Count";
+export type EmfWriter = (line: string) => void;
 
-const METER_NAME = "mini-banker-desktop";
+interface EmfOptions {
+  service: string;
+  write?: EmfWriter;
+  env?: NodeJS.ProcessEnv;
+}
 
-function createInstruments(meter: ReturnType<typeof metrics.getMeter>,): Instruments {
+/** Builds one EMF document. Each attribute becomes a dimension; `Service` is always present. */
+export function emfLine(
+  service: string,
+  name: string,
+  unit: Unit,
+  value: number,
+  attributes: MetricAttributes = {},
+  timestamp = Date.now(),
+): string {
+  const dimensions = { Service: service, ...attributes };
+  return JSON.stringify({
+    _aws: {
+      Timestamp: timestamp,
+      CloudWatchMetrics: [
+        {
+          Namespace: METRIC_NAMESPACE,
+          Dimensions: [Object.keys(dimensions)],
+          Metrics: [{ Name: name, Unit: unit }],
+        },
+      ],
+    },
+    ...dimensions,
+    [name]: value,
+  });
+}
+
+/** Reads the X-Ray root id from `Root=1-...;Parent=...;Sampled=1`. */
+export function xrayTraceId(env: NodeJS.ProcessEnv = process.env): string | null {
+  const header = env._X_AMZN_TRACE_ID;
+  const root = header?.split(";").find((part) => part.startsWith("Root="));
+  return root ? root.slice("Root=".length) : null;
+}
+
+export function createEmfTelemetry({ service, write = console.log, env = process.env }: EmfOptions): Telemetry {
+  const emit = (name: string, unit: Unit, value: number, attributes?: MetricAttributes) =>
+    write(emfLine(service, name, unit, value, attributes));
+
   return {
-    httpDuration: meter.createHistogram("http.server.duration", {
-      unit: "ms",
-      description: "Server-side request duration",
-    }),
-    cancelCount: meter.createCounter("mandate.cancel.count", {description: "Mandates cancelled"}),
-    searchNotFoundCount: meter.createCounter("customer.search.notfound.count", {
-      description: "Customer searches that matched no CRN",
-    }),
+    instruments: {
+      // Dimensions are route and status class only, to keep the metric count (and cost) small.
+      httpDuration: {
+        record: (value, attributes = {}) =>
+          emit("RequestDuration", "Milliseconds", value, {
+            Route: attributes["http.route"] ?? "unknown",
+            StatusClass: `${(attributes["http.status_code"] ?? "0").charAt(0)}xx`,
+          }),
+      },
+      cancelCount: { add: (value) => emit("MandatesCancelled", "Count", value) },
+      searchNotFoundCount: { add: (value) => emit("CustomerSearchNotFound", "Count", value) },
+    },
+    // Read per call: Lambda sets _X_AMZN_TRACE_ID for every invocation.
+    traceId: () => xrayTraceId(env),
   };
 }
 
 export function createNoopTelemetry(): Telemetry {
+  const noop = { record: () => {}, add: () => {} };
   return {
-    tracer: trace.getTracer(METER_NAME),
-    instruments: createInstruments(metrics.getMeter(METER_NAME)),
-    flush: async () => {},
+    instruments: { httpDuration: noop, cancelCount: noop, searchNotFoundCount: noop },
+    traceId: () => null,
   };
 }
 
-export async function loadAuthHeaderFromSsm(parameterName: string): Promise<string> {
-  const ssm = new SSMClient({});
-  const out = await ssm.send(new GetParameterCommand({ Name: parameterName, WithDecryption: true }));
-  const value = out.Parameter?.Value;
-  if (!value) throw new Error(`SSM parameter ${parameterName} is empty`);
-  return toAuthorizationHeader(value);
+export function createTelemetry(env: NodeJS.ProcessEnv = process.env): Telemetry {
+  const inLambda = Boolean(env.AWS_LAMBDA_FUNCTION_NAME);
+  if (!inLambda && env.EMF_ENABLED !== "1") return createNoopTelemetry();
+  return createEmfTelemetry({
+    service: env.SERVICE_NAME ?? env.AWS_LAMBDA_FUNCTION_NAME ?? "mbd-backend",
+    env,
+  });
 }
 
-/** Accepts a ready header value, or `instanceId:token` which Grafana Cloud expects as HTTP basic auth. */
-export function toAuthorizationHeader(value: string): string {
-  const trimmed = value.trim();
-  if (/^(Basic|Bearer) /i.test(trimmed)) return trimmed;
-  if (trimmed.includes(":")) return `Basic ${Buffer.from(trimmed).toString("base64")}`;
-  return `Bearer ${trimmed}`;
-}
+let cached: Telemetry | undefined;
 
-export async function createTelemetry(
-  env: NodeJS.ProcessEnv = process.env,
-  loadAuthHeader: AuthHeaderLoader = loadAuthHeaderFromSsm,
-): Promise<Telemetry> {
-  const endpoint = env.OTEL_EXPORTER_OTLP_ENDPOINT?.replace(/\/+$/, "");
-  if (!endpoint) return createNoopTelemetry();
-
-  const headers: Record<string, string> = {};
-  const parameterName = env.OTEL_AUTH_PARAMETER_NAME;
-  if (parameterName) {
-    try {
-      headers.Authorization = await loadAuthHeader(parameterName);
-    } catch (error) {
-      console.warn(
-        JSON.stringify({
-          event: "telemetry.disabled",
-          reason: error instanceof Error ? error.name : "unknown",
-        }),
-      );
-      return createNoopTelemetry();
-    }
-  }
-
-  const resource = resourceFromAttributes({
-    "service.name": env.OTEL_SERVICE_NAME ?? "mbd-backend",
-    "service.instance.id": uuidv7(),
-  });
-
-  const tracerProvider = new TracerProvider({
-    resource,
-    spanProcessors: [new BatchSpanProcessor({
-        exporter: new OTLPTraceExporter({ url: `${endpoint}/v1/traces`, headers }),
-      }),
-    ],
-  });
-
-  const meterProvider = new MeterProvider({
-    resource,
-    readers: [
-      new PeriodicExportingMetricReader({
-        exporter: new OTLPMetricExporter({ url: `${endpoint}/v1/metrics`, headers}),
-        exportIntervalMillis: 60_000,
-      }),
-    ],
-  });
-
-  return {
-    tracer: tracerProvider.getTracer(METER_NAME),
-    instruments: createInstruments(meterProvider.getMeter(METER_NAME)),
-    flush: async () => {await Promise.allSettled([tracerProvider.forceFlush(),meterProvider.forceFlush()]);
-    },
-  };
-}
-
-let cached: Promise<Telemetry> | undefined;
-
-export const getTelemetry = (): Promise<Telemetry> => (cached ??= createTelemetry())
+export const getTelemetry = (): Telemetry => (cached ??= createTelemetry());
