@@ -15,7 +15,7 @@ A simplified web app that is used by bankers to query transactions of user accou
 
 ## Architecture
 
-![Mini Banker Web AWS architecture](docs/mini-banker-architecture.png)
+![Mini Banker Web AWS architecture](docs/diagrams/mini-banker-architecture.png)
 
 ## Tech Stack
 
@@ -37,7 +37,7 @@ A simplified web app that is used by bankers to query transactions of user accou
 
 ## Database Design
 
-![Mini Banker Web database design (ERD)](docs/database-design-erd-2.png)
+![Mini Banker Web database design (ERD)](docs/diagrams/database-design-erd-2.png)
 
 ## Project Structure
 
