@@ -21,7 +21,7 @@ A simplified web app that is used by bankers to query transactions of user accou
 
 | Technology | What it does here |
 |------------|-------------------|
-| TypeScript (Node 22) | One language for the whole project, with strict type checking to catch mistakes early. |
+| TypeScript (Node 22) | Backend language to match with React TypeScript|
 | React | The screens bankers use, built as a single-page app. |
 | Authorization Code with PKCE flow | Sends the banker to the login page and brings them back signed in. |
 | AWS Lambda |  Functions that run the business logic. |
