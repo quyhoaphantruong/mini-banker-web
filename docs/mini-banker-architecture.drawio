@@ -1,0 +1,111 @@
+<mxfile host="Electron">
+  <diagram id="laj5BlQPtYDfdfjATPee" name="Page-1">
+    <mxGraphModel dx="3405" dy="933" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="900" math="0" shadow="0" adaptiveColors="auto">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontStyle=1;fontSize=18;align=left;" value="Mini Banker Web - AWS architecture (ap-southeast-2)" vertex="1">
+          <mxGeometry height="30" width="620" x="250" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="aws" parent="1" style="sketch=0;outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud;strokeColor=#232F3E;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#232F3E;dashed=0;" value="AWS Cloud - ap-southeast-2" vertex="1">
+          <mxGeometry height="720" width="890" x="270" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="browser" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#232F3D;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.users;" value="Banker browser&lt;br&gt;(React SPA)" vertex="1">
+          <mxGeometry height="64" width="64" x="90" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="gha" parent="1" style="dashed=0;outlineConnect=0;html=1;align=center;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;shape=mxgraph.weblogos.github;fontSize=11;" value="GitHub Actions&lt;br&gt;(lint, test, build; deploy: s3 sync, terraform apply via OIDC)" vertex="1">
+          <mxGeometry height="70" width="85" x="79.5" y="670" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#7AA116;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;" value="S3&lt;br&gt;(static SPA build, config.json; private, OAC only)" vertex="1">
+          <mxGeometry height="64" width="64" x="370" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="cf" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#8C4FFF;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudfront;" value="CloudFront&lt;br&gt;(OAC, HTTPS, SPA rewrite fn, security headers)" vertex="1">
+          <mxGeometry height="64" width="64" x="370" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="apigw" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#E7157B;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.api_gateway;" value="API Gateway&lt;br&gt;(HTTP API v2, JWT authorizer)" vertex="1">
+          <mxGeometry height="64" width="64" x="593" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="l1" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" value="Lambda: launch&lt;br&gt;GET /api/launch" vertex="1">
+          <mxGeometry height="64" width="64" x="828" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="l2" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" value="Lambda: customers&lt;br&gt;search, get, accounts" vertex="1">
+          <mxGeometry height="64" width="64" x="828" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="l3" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#ED7100;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;" value="Lambda: mandates&lt;br&gt;list, get, events, transactions, cancel" vertex="1">
+          <mxGeometry height="64" width="64" x="828" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="ddb" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#C925D1;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;" value="DynamoDB&lt;br&gt;(single table bdsmini, GSI1, GSI2, TTL)" vertex="1">
+          <mxGeometry height="64" width="64" x="1038" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="ssm" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#E7157B;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.parameter_store;" value="AWS X-Ray&lt;br&gt;(Lambda active tracing, service map)" vertex="1">
+          <mxGeometry height="64" width="62" x="1038" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="cw" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#E7157B;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudwatch_2;" value="CloudWatch Logs&lt;br&gt;(Lambda, audit and API access logs; EMF metric lines)" vertex="1">
+          <mxGeometry height="64" width="64" x="828" y="640" as="geometry" />
+        </mxCell>
+        <mxCell id="cog" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;fillColor=#DD344C;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=11;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cognito;" value="Cognito User Pool&lt;br&gt;(code + PKCE, group: banker)" vertex="1">
+          <mxGeometry height="64" width="64" x="593" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="tf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#f5f5f5;strokeColor=#666666;" value="Terraform state&lt;br&gt;(S3 + DynamoDB lock)" vertex="1">
+          <mxGeometry height="60" width="150" x="320" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="graf" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;verticalAlign=top;fontStyle=1;" value="CloudWatch&#xa;Metrics (AWS/* + MiniBankerDesktop EMF)&#xa;Dashboard (API, Lambda, DynamoDB, business)&#xa;Alarms -&gt; SNS -&gt; email" vertex="1">
+          <mxGeometry height="260" width="220" x="1230" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="browser" style="endArrow=classic;html=1;" target="cf" value="1. HTTPS (static assets)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="cf" style="endArrow=classic;html=1;" target="s3" value="CloudFront reads (OAC)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="cf" style="endArrow=classic;html=1;" target="apigw" value="3. /api/* + Bearer JWT">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4a" edge="1" parent="1" source="apigw" style="endArrow=classic;html=1;" target="l1" value="invoke (claims: cognito:groups)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4b" edge="1" parent="1" source="apigw" style="endArrow=classic;html=1;" target="l2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4c" edge="1" parent="1" source="apigw" style="endArrow=classic;html=1;" target="l3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="browser" style="endArrow=classic;html=1;dashed=1;" target="cog" value="2. login redirect (Authorization Code + PKCE)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="122" y="622" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="apigw" style="endArrow=classic;html=1;dashed=1;" target="cog" value="validate JWT (issuer, JWKS)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7a" edge="1" parent="1" source="l2" style="endArrow=classic;html=1;" target="ddb" value="4. Get/Query/TransactWrite">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7b" edge="1" parent="1" source="l3" style="endArrow=classic;html=1;" target="ddb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="l3" style="endArrow=classic;html=1;dashed=1;" target="ssm" value="read token at cold start">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="l3" style="endArrow=classic;html=1;dashed=1;" target="cw" value="stdout (default)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="l1" style="endArrow=classic;html=1;strokeColor=#CC4125;fontColor=#CC4125;" target="graf" value="5. EMF log lines (metrics), X-Ray segments (traces)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="860" y="150" />
+              <mxPoint x="1340" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="gha" style="endArrow=classic;html=1;dashed=1;" target="tf" value="deploy">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
