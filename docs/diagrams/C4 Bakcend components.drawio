@@ -1,0 +1,207 @@
+<mxfile host="Electron">
+  <diagram name="C4-3 Backend components" id="jEfFM4pqpFgyHj0vCEhM">
+    <mxGraphModel dx="1337" dy="575" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-1" parent="1" style="text;html=1;fontSize=16;fontStyle=1;align=left;" value="C4 Level 3 - Component diagram: Backend (Lambda BFF) container" vertex="1">
+          <mxGeometry height="30" width="800" x="20" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=11;" value="API Gateway&lt;br&gt;HTTP API v2 + JWT authorizer [external]" vertex="1">
+          <mxGeometry height="70" width="260" x="560" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#6C8EBF;dashed=1;verticalAlign=top;align=left;spacingLeft=10;fontStyle=1;" value="Backend (Lambda BFF) - Node 22, esbuild bundles" vertex="1">
+          <mxGeometry height="1100" width="1470" x="70" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="lambda/launch.ts&lt;br&gt;exports handler" vertex="1">
+          <mxGeometry height="70" width="200" x="60" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="lambda/customers.ts&lt;br&gt;exports handler" vertex="1">
+          <mxGeometry height="70" width="200" x="380" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="lambda/mandates.ts&lt;br&gt;exports handler" vertex="1">
+          <mxGeometry height="70" width="200" x="640" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=11;dashed=1;" value="local/server.ts&lt;br&gt;node:http dev server (dev only)" vertex="1">
+          <mxGeometry height="70" width="220" x="1000" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=11;dashed=1;" value="local/devAuth.ts&lt;br&gt;devClaims, assertDevAuthIsLocalOnly (dev only)" vertex="1">
+          <mxGeometry height="70" width="220" x="1260" y="220" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="http/handler.ts&lt;br&gt;createHandler: span, auth, route, error mapping" vertex="1">
+          <mxGeometry height="70" width="240" x="300" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="deps.ts&lt;br&gt;createDeps: wires repo, telemetry, config, audit, now" vertex="1">
+          <mxGeometry height="70" width="240" x="780" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="http/auth.ts&lt;br&gt;authenticate: JWT claims, banker group" vertex="1">
+          <mxGeometry height="70" width="200" x="60" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="http/router.ts&lt;br&gt;matchRoute, routeLabel" vertex="1">
+          <mxGeometry height="70" width="200" x="210" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="http/parse.ts&lt;br&gt;zod request parsing" vertex="1">
+          <mxGeometry height="70" width="200" x="570" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="http/errors.ts&lt;br&gt;HttpError, notFound, forbidden" vertex="1">
+          <mxGeometry height="70" width="200" x="780" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-15" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="telemetry/index.ts&lt;br&gt;CloudWatch EMF metrics + X-Ray trace id (no-op outside Lambda)" vertex="1">
+          <mxGeometry height="70" width="260" x="1180" y="540" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="handlers/{launch,customers,mandates}.ts&lt;br&gt;route tables (RouteDef[]) ; routes.ts allRoutes" vertex="1">
+          <mxGeometry height="70" width="300" x="520" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="config.ts&lt;br&gt;loadConfig: TABLE_NAME, region, endpoint" vertex="1">
+          <mxGeometry height="70" width="260" x="1180" y="700" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="domain/cancelMandate.ts&lt;br&gt;cancelMandate use case" vertex="1">
+          <mxGeometry height="70" width="220" x="60" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-19" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="domain/mandate.ts&lt;br&gt;planCancel, isCancellable, DTO mapping" vertex="1">
+          <mxGeometry height="70" width="240" x="370" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-20" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="domain/audit.ts&lt;br&gt;buildAuditLine" vertex="1">
+          <mxGeometry height="70" width="200" x="640" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-21" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="domain/ports.ts&lt;br&gt;CancelRepository, CommitOutcome" vertex="1">
+          <mxGeometry height="70" width="240" x="130" y="1070" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-22" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=11;" value="repo/repository.ts&lt;br&gt;Repository implements ports (A1-A9); commitCancel = one TransactWriteItems" vertex="1">
+          <mxGeometry height="80" width="300" x="880" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-23" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=11;" value="repo/dynamo.ts&lt;br&gt;createDb: DynamoDBDocumentClient" vertex="1">
+          <mxGeometry height="70" width="220" x="1260" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-24" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;" value="@mbd/shared [package]&lt;br&gt;keys.ts (keys, GSI helpers), item and API types, nextStatus, ROUTES, reason codes" vertex="1">
+          <mxGeometry height="80" width="520" x="330" y="1150" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-25" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=11;" value="DynamoDB table bdsmini [external]" vertex="1">
+          <mxGeometry height="80" width="280" x="1000" y="1280" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-26" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-4" value="invokes (event)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-27" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-9" value="createHandler(routes, deps)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-28" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-5" value="invokes (event)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-29" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-9" value="createHandler(routes, deps)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-30" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-6" value="invokes (event)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-31" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-9" value="createHandler(routes, deps)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-32" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-10" value="createDeps()">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-33" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;dashed=1;" target="pcMxczvNa6lBwoUuWBwJ-9" value="createHandler(allRoutes)">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-65" connectable="0" parent="pcMxczvNa6lBwoUuWBwJ-33" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];inheritText=1;fontSize=10;labelBackgroundColor=#FFFFFF;" value="Text" vertex="1">
+          <mxGeometry relative="1" x="0.613" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-34" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;dashed=1;" target="pcMxczvNa6lBwoUuWBwJ-8" value="dev claims">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-35" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;dashed=1;" target="pcMxczvNa6lBwoUuWBwJ-10" value="createDeps()">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-36" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-11" value="authenticate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-37" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-12" value="matchRoute">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-38" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-14" value="map errors">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-39" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-15" value="span, metrics">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-40" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-13" value="parse input">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-41" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-18" value="cancelMandate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-42" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-20" value="buildAuditLine">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-43" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-22" value="reads via Repository">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-44" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-19" value="planCancel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-45" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-21" value="uses port">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-46" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-21" value="implements">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-47" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-23" value="db client">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-48" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-17" value="AppConfig">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-49" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-22" value="createRepository">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-50" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-17" value="loadConfig">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-51" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-24" value="nextStatus, keys">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-52" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-24" value="keys, item types">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-53" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-25" value="TransactWriteItems / Query / Get">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-54" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-25" value="SDK v3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-55" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-16" value="dispatch RouteDef">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-56" edge="1" parent="1" source="pcMxczvNa6lBwoUuWBwJ-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=block;fontSize=10;labelBackgroundColor=#FFFFFF;" target="pcMxczvNa6lBwoUuWBwJ-14" value="HttpError">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-57" parent="1" style="text;html=1;fontStyle=1;align=left;fontSize=13;" value="Legend" vertex="1">
+          <mxGeometry height="30" width="240" x="1560" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-58" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=11;" value="Adapter / entry / wiring component" vertex="1">
+          <mxGeometry height="40" width="240" x="1560" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-59" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="Domain (pure logic, ports)" vertex="1">
+          <mxGeometry height="40" width="240" x="1560" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-60" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=11;" value="Repository (infrastructure)" vertex="1">
+          <mxGeometry height="40" width="240" x="1560" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-61" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=11;" value="Shared package (contract)" vertex="1">
+          <mxGeometry height="40" width="240" x="1560" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-62" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=11;" value="External system" vertex="1">
+          <mxGeometry height="40" width="240" x="1560" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-63" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#666666;fontSize=11;dashed=1;" value="Dev only (local)" vertex="1">
+          <mxGeometry height="40" width="240" x="1560" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="pcMxczvNa6lBwoUuWBwJ-64" parent="1" style="text;html=1;whiteSpace=wrap;align=left;fontSize=10;" value="Arrows point from dependent (outer) to dependency (inner); label = what is used. Domain depends only on ports and shared." vertex="1">
+          <mxGeometry height="60" width="240" x="1560" y="500" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
