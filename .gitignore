@@ -13,3 +13,6 @@ coverage/
 .dynamodb/
 playwright-report/
 test-results/
+# Private local docs
+docs/deploy-plan.md
+docs/deploy-story.md
