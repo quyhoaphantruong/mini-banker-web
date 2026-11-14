@@ -4,6 +4,12 @@ on:
   pull_request:
   push:
     branches: [main]
+    # Docs-only pushes skip CI, and so skip Deploy (which runs after CI on main). PRs still run CI.
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - "**/*.drawio"
+      - "**/*.png"
 
 permissions:
   contents: read
