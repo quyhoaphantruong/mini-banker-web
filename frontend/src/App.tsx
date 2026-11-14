@@ -82,7 +82,7 @@ function EntitlementGate({ auth }: { auth: Auth }) {
   return (
     <div className="shell">
       <header className="topbar">
-        <strong>Mini Banker Desktop</strong>
+        <strong>Mini Banker Web</strong>
         <span className="topbar-user">
           {launch.data.username}
           <button

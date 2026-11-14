@@ -64,7 +64,7 @@ Dev environment:
 
 One-off setup:
 
-- [ ] Put the real OTLP token: `aws ssm put-parameter --name "$(terraform output -raw otlp_token_parameter_name)" --type SecureString --overwrite --value '<token>'`
+- [~] ~~Put the real OTLP token in SSM~~ (obsolete 2026-11-14: Grafana dropped, monitoring is CloudWatch only)
 - [x] Create banker user: `admin-create-user`, `admin-add-to-group --group-name banker`, `admin-set-user-password --permanent` (done 2026-11-13: user `quyhoaphantruong@gmail.com`, in `banker`, CONFIRMED)
 - [x] Seed: `SEED_ALLOW_AWS=1 TABLE_NAME=$(terraform output -raw table_name) AWS_REGION=ap-southeast-2 npm run seed -w seed`
 - [~] First SPA upload (skipped while CloudFront is off; the SPA runs locally with `npm run dev -w frontend` against the deployed API and Cognito)
@@ -75,7 +75,7 @@ Smoke test:
 - [x] Search CRN `100000001` (accounts and seven mandates show)
 - [x] Cancel a mandate succeeds
 - [x] CRN `100000004` shows not found
-- [~] (skipped while observability is off) Metrics/traces appear in Grafana Explore; check metric names match the dashboards
+- [ ] (Phase 6) Metrics appear in the CloudWatch dashboard and traces in X-Ray
 
 ## Phase 3: GitHub setup
 
@@ -94,9 +94,9 @@ Auth is the IAM user `bdsmini-dev-github-deploy` (access keys as GitHub secrets)
 | Secret | `AWS_ACCESS_KEY_ID` | deploy user access key id | [x] |
 | Secret | `AWS_SECRET_ACCESS_KEY` | deploy user secret key | [x] |
 | Variable | `TF_STATE_BUCKET` | `bdsmini-tfstate-070404529867` | [x] |
-| Variable (optional) | `ALERT_EMAIL` | alert email (only used with observability) | [ ] |
+| Variable (optional) | `ALERT_EMAIL` | CloudWatch alarm email (SNS subscription) | [ ] |
 | Variable (optional) | `TF_LOCK_TABLE` | only if not `bdsmini-tflock` | [ ] |
-| Later, observability | `ENABLE_OBSERVABILITY`, `GRAFANA_URL`, `GRAFANA_OTLP_ENDPOINT`, secret `GRAFANA_SERVICE_ACCOUNT_TOKEN` | not needed now | n/a |
+| Variable (optional) | `ENABLE_OBSERVABILITY` | `false` to skip dashboard and alarms (default `true`) | n/a |
 
 - [x] Settings, Branches: protect `main` (require PR, require checks `verify` and `e2e`). Note: blocks direct pushes to `main`; branch protection on a private repo needs a paid plan
 
@@ -117,7 +117,19 @@ AWS Support enabled CloudFront on the account (`aws cloudfront list-distribution
 - [x] Local apply as `mbd-admin` in `infra/envs/dev` (the deploy user cannot create these): `terraform plan` then `terraform apply` (distribution takes 5-15 min; Cognito callback/logout URLs, `config.json` and API CORS change)
 - [x] Upload the SPA: `aws s3 sync frontend/dist s3://bdsmini-dev-site-070404529867 --delete --exclude config.json --profile mbd-admin` (or let Deploy do it)
 - [x] Open the `site_url` output (`https://...cloudfront.net`), log in, repeat the smoke test (`100000001`, cancel a mandate, `100000004`)
-- [ ] Check the post-merge Deploy run; widen the deploy policy if CI hits AccessDenied on CloudFront reads or `cloudfront:CreateInvalidation`; apply locally
+- [x] Check the post-merge Deploy run; widen the deploy policy if CI hits AccessDenied on CloudFront reads or `cloudfront:CreateInvalidation`; apply locally
+
+## Phase 6: CloudWatch monitoring
+
+Grafana Cloud and OTel removed. Metrics are EMF log lines (namespace `MiniBankerDesktop`), traces are X-Ray active tracing, and `modules/observability` holds the SNS topic, 7 alarms and one dashboard. `enable_observability` now defaults to `true`.
+
+- [x] Code: backend telemetry to EMF, OTel and SSM deps removed, Lambda X-Ray `Active`, observability module rewritten, deploy policy gains CloudWatch alarm/dashboard and SNS actions (SSM removed); `terraform validate` passes
+- [ ] `terraform init -upgrade` in `envs/dev` (drops the grafana provider from `.terraform.lock.hcl`; failed 2026-11-14 with "session has expired", re-auth and retry), commit the lock file
+- [ ] Local `terraform.tfvars`: set `enable_observability = true` (it is `false` there and overrides the default) and `alert_email`
+- [ ] `npm run build -w backend`, then local `terraform apply` as `mbd-admin` (deploy policy must change before CI can create alarms/SNS)
+- [ ] Confirm the SNS subscription email
+- [ ] Set `ALERT_EMAIL` in the GitHub `dev` environment
+- [ ] Smoke test, then check the dashboard (`terraform output -raw dashboard_url`), `MiniBankerDesktop` metrics and an X-Ray trace
 
 ## Teardown and cost
 
@@ -159,3 +171,8 @@ AWS Support enabled CloudFront on the account (`aws cloudfront list-distribution
 | 2026-11-13 | AWS Support enabled CloudFront. Branch `cloudfront-default-on` flips `enable_cloudfront` default to true and adds Phase 5. Local apply and SPA upload pending |
 | 2026-11-13 | CloudFront live: local apply 5 added, 7 changed, 0 destroyed; `site_url` `https://d21tuarzeokcq6.cloudfront.net`, `distribution_id` `E1YZFWYC02AYQ3`. SPA synced to the site bucket (only `index.html` differed). Smoke test on the CloudFront URL passed. PR #2 merged: `enable_cloudfront` defaults to true |
 | 2026-11-13 | Post-merge Deploy failed at plan refresh: deploy user lacked `cloudfront:GetOriginAccessControl` (AccessDenied). Branch `cloudfront-deploy-perms` adds OAC read/update, distribution tag and config actions to the deploy policy; needs a local apply as `mbd-admin`, then re-run Deploy |
+| 2026-11-13 | Chicken-and-egg: Deploy plan refresh needed `cloudfront:GetOriginAccessControl`, which the deploy user lacked, and the deploy user cannot change its own policy. PR #3 added OAC and distribution tag actions; user applied locally as `mbd-admin` (0 added, 1 changed, 0 destroyed) after one transient state-lock error (no stale lock found). Re-run Deploy is green. **Deployment complete**: SPA on CloudFront, CI deploys every merge. Story of the problems: `docs/deploy-story.md` |
+| 2026-11-14 | Architecture change: monitoring is CloudWatch only (Grafana judged redundant). Backend emits EMF metrics, Lambdas use X-Ray active tracing, `modules/observability` is now SNS + 7 alarms + dashboard, Grafana provider/vars/SSM token and OTel deps removed, diagrams relabelled. Backend typecheck and build OK, `terraform validate` OK; `init -upgrade` failed ("session has expired"). Not applied yet, see Phase 6 |
+| 2026-11-14 | Found `envs/dev` had been destroyed on 2026-11-13 (`infra/teardown.sh`; state held only the deploy IAM user, no Lambdas/table/CloudFront). `terraform init -upgrade` OK. User approved a rebuild: apply 56 added, 0 changed, 0 destroyed, incl. CloudWatch dashboard, 7 alarms, SNS topic. New values: `api_endpoint` `https://zzap417hif.execute-api.ap-southeast-2.amazonaws.com`, `site_url` `https://d3u08akq013p53.cloudfront.net`, `distribution_id` `E1COBNYF9XZO70`, Cognito pool `ap-southeast-2_5T3Hvc0zq`, client `3ihc5g6hjuiit28i4cj1hm1sc5`. GitHub `dev` variable `ALERT_EMAIL` set. Still to do: confirm SNS email, banker user, seed, SPA upload, new deploy-user access key and secrets, local `config.json`, smoke test |
+| 2026-11-14 | After the rebuild: seeded 43 items into `bdsmini-dev`, synced `frontend/dist` to the site bucket (config.json excluded) and invalidated CloudFront (`I9N38ZQ9A17JOHGJRT6ZR2BS23`), updated local `frontend/public/config.json` to the new API and Cognito IDs. Still to do: banker user, deploy-user access key and GitHub secrets, confirm SNS email, smoke test |
+| 2026-11-14 | Deploy IAM user `bdsmini-dev-github-deploy` had been deleted by hand (state drift). Re-applied: 2 added, 0 changed, 0 destroyed (user and policy attachment). New access key and GitHub secrets still to set via the rotate script |

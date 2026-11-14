@@ -47,7 +47,7 @@ npm run dev -w frontend                   # :5173, proxies /api to :3001
 - `repo/`: lib-dynamodb implementation of the ports (access patterns A1-A9). Cancel is a single `TransactWriteItems`.
 - `deps.ts` wires dependencies; `local/server.ts` is the dev server over the same handlers.
 - Build (`backend/scripts/build.mjs`) is esbuild with `bundle: true`, so shared is inlined into each `dist/*.mjs`.
-- Telemetry is OTel over OTLP/HTTP and is a no-op when `OTEL_EXPORTER_OTLP_ENDPOINT` is unset.
+- Telemetry is CloudWatch only: metrics are EMF log lines (`telemetry/index.ts`, namespace `MiniBankerDesktop`), traces are Lambda X-Ray active tracing. No-op outside Lambda unless `EMF_ENABLED=1`. Alarms and the dashboard live in `infra/modules/observability`.
 
 **Frontend** fetches `/config.json` at startup (`devAuth` bypasses Cognito; otherwise OIDC code+PKCE with `oidc-client-ts`), to Typed API client in `src/api` built on the shared `ROUTES`; `apiBaseUrl` replaces the `/api` prefix. Navigation is React state, formatted only in `src/format.ts`. Tests use MSW.
 

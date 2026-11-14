@@ -34,8 +34,12 @@ output "lambda_function_names" {
   value = [for fn in module.lambda.functions : fn.function_name]
 }
 
-output "otlp_token_parameter_name" {
-  value = var.enable_observability ? module.observability[0].otlp_token_parameter_name : null
+output "dashboard_url" {
+  value = var.enable_observability ? module.observability[0].dashboard_url : null
+}
+
+output "alert_topic_arn" {
+  value = var.enable_observability ? module.observability[0].alert_topic_arn : null
 }
 
 output "github_deploy_role_arn" {

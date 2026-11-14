@@ -39,36 +39,20 @@ variable "create_github_oidc_provider" {
 
 variable "enable_observability" {
   type        = bool
-  default     = false
-  description = "Create the Grafana Cloud dashboards/alerts and send OTLP telemetry. When false, none of the grafana_* variables are needed."
+  default     = true
+  description = "Create the CloudWatch dashboard, alarms and SNS alert topic (modules/observability). Needs the deploy policy from modules/github_oidc applied first with admin credentials."
+}
+
+variable "enable_tracing" {
+  type        = bool
+  default     = true
+  description = "X-Ray active tracing on the Lambdas."
 }
 
 variable "alert_email" {
-    type    = string
-    default = ""
-}
-
-# Placeholder defaults keep the grafana provider configurable when observability is off.
-variable "grafana_url" {
-    type    = string
-    default = "http://localhost:3000"
-}
-
-variable "grafana_otlp_endpoint" {
-    type = string
-    default = ""
-    description = "Grafana Cloud OTLP gateway URL, e.g. https://otlp-gateway-prod-au-southeast-1.grafana.net/otlp"
-}
-
-variable "grafana_service_account_token" {
-    type = string
-    default = "unused"
-    sensitive = true
-}
-
-variable "prometheus_datasource_uid" {
-  type = string
-  default = "grafanacloud-prom"
+  type        = string
+  default     = ""
+  description = "Alarm notifications. Empty means alarms fire but nobody is emailed."
 }
 
 variable "cognito_domain_prefix" {

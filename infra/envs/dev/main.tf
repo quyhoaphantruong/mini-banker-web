@@ -9,11 +9,6 @@ provider "aws" {
   }
 }
 
-provider "grafana" {
-  url  = var.grafana_url
-  auth = var.grafana_service_account_token
-}
-
 data "aws_caller_identity" "current" {}
 
 locals {
@@ -24,9 +19,6 @@ locals {
 
   # Must not contain "aws", "amazon" or "cognito". Globally unique per region.
   cognito_domain_prefix = coalesce(var.cognito_domain_prefix, "${var.name_prefix}-${local.account_id}")
-
-  # Under /<name_prefix>/ so the GitHub deploy role can manage it.
-  otlp_token_parameter_name = "/${var.name_prefix}/otlp-token"
 
   # Bootstrap creates these; envs/dev only needs their ARNs for the deploy role.
   state_bucket_arn = "arn:aws:s3:::${var.state_bucket_name}"
@@ -72,26 +64,27 @@ module "dynamodb" {
   table_name = var.name_prefix
 }
 
-module "observability" {
-  count                     = var.enable_observability ? 1 : 0
-  source                    = "../../modules/observability"
-  name_prefix               = var.name_prefix
-  alert_email               = var.alert_email
-  prometheus_datasource_uid = var.prometheus_datasource_uid
-  otlp_token_parameter_name = local.otlp_token_parameter_name
+module "lambda" {
+  source         = "../../modules/lambda"
+  name_prefix    = var.name_prefix
+  dist_dir       = local.backend_dist_dir
+  table_name     = module.dynamodb.table_name
+  table_arn      = module.dynamodb.table_arn
+  index_arns     = module.dynamodb.index_arns
+  enable_tracing = var.enable_tracing
+  functions      = local.functions
 }
 
-module "lambda" {
-  source                   = "../../modules/lambda"
-  name_prefix              = var.name_prefix
-  dist_dir                 = local.backend_dist_dir
-  table_name               = module.dynamodb.table_name
-  table_arn                = module.dynamodb.table_arn
-  index_arns               = module.dynamodb.index_arns
-  otlp_endpoint            = var.enable_observability ? var.grafana_otlp_endpoint : null
-  otel_auth_parameter_name = var.enable_observability ? module.observability[0].otlp_token_parameter_name : null
-  otel_auth_parameter_arn  = var.enable_observability ? module.observability[0].otlp_token_parameter_arn : null
-  functions                = local.functions
+# CloudWatch alarms, dashboard and the SNS alert topic. Metrics and logs flow regardless of this flag.
+module "observability" {
+  count          = var.enable_observability ? 1 : 0
+  source         = "../../modules/observability"
+  name_prefix    = var.name_prefix
+  region         = var.region
+  alert_email    = var.alert_email
+  function_names = { for k, fn in module.lambda.functions : k => fn.function_name }
+  api_id         = module.api.api_id
+  table_name     = module.dynamodb.table_name
 }
 
 module "cognito" {

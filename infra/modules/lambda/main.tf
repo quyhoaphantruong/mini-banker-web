@@ -27,19 +27,10 @@ variable "index_arns" {
   description = "Index name to ARN."
 }
 
-variable "otlp_endpoint" {
-  type    = string
-  default = null
-}
-
-variable "otel_auth_parameter_name" {
-  type    = string
-  default = null
-}
-
-variable "otel_auth_parameter_arn" {
-  type    = string
-  default = null
+variable "enable_tracing" {
+  type        = bool
+  default     = true
+  description = "X-Ray active tracing. Free tier covers 100k traces a month."
 }
 
 variable "handler" {
@@ -105,12 +96,13 @@ data "aws_iam_policy_document" "this" {
   }
 
   dynamic "statement" {
-    for_each = var.otel_auth_parameter_arn != null ? [1] : []
+    for_each = var.enable_tracing ? [1] : []
 
+    # These actions do not support resource-level permissions.
     content {
-      sid       = "ReadOtlpToken"
-      actions   = ["ssm:GetParameter"]
-      resources = [var.otel_auth_parameter_arn]
+      sid       = "WriteTraces"
+      actions   = ["xray:PutTraceSegments", "xray:PutTelemetryRecords"]
+      resources = ["*"]
     }
   }
 
@@ -148,7 +140,7 @@ resource "aws_lambda_function" "this" {
   memory_size      = 256
 
   tracing_config {
-    mode = "PassThrough"
+    mode = var.enable_tracing ? "Active" : "PassThrough"
   }
 
   logging_config {
@@ -157,17 +149,12 @@ resource "aws_lambda_function" "this" {
   }
 
   # AWS_REGION is reserved. The Lambda runtime sets it.
+  # SERVICE_NAME is the `Service` dimension of the EMF metrics (backend/src/telemetry).
   environment {
-    variables = merge(
-      {
-        TABLE_NAME        = var.table_name
-        OTEL_SERVICE_NAME = "${var.name_prefix}-${each.key}"
-      },
-      var.otlp_endpoint == null ? {} : {
-        OTEL_EXPORTER_OTLP_ENDPOINT = var.otlp_endpoint
-        OTEL_AUTH_PARAMETER_NAME    = var.otel_auth_parameter_name
-      }
-    )
+    variables = {
+      TABLE_NAME   = var.table_name
+      SERVICE_NAME = "${var.name_prefix}-${each.key}"
+    }
   }
 
   depends_on = [aws_iam_role_policy.this]

@@ -200,9 +200,18 @@ data "aws_iam_policy_document" "deploy" {
   }
 
   statement {
-    sid       = "ManageProjectParameters"
-    actions   = ["ssm:GetParameter", "ssm:GetParameters", "ssm:PutParameter", "ssm:ListTagsForResource", "ssm:AddTagsToResource"]
-    resources = ["arn:aws:ssm:${local.region}:${local.account_id}:parameter/${var.name_prefix}/*"]
+    sid     = "ManageMonitoring"
+    actions = ["cloudwatch:PutMetricAlarm", "cloudwatch:DeleteAlarms", "cloudwatch:DescribeAlarms", "cloudwatch:ListTagsForResource", "cloudwatch:TagResource", "cloudwatch:PutDashboard", "cloudwatch:GetDashboard", "cloudwatch:DeleteDashboards"]
+    resources = [
+      "arn:aws:cloudwatch:${local.region}:${local.account_id}:alarm:${var.name_prefix}-*",
+      "arn:aws:cloudwatch::${local.account_id}:dashboard/${var.name_prefix}",
+    ]
+  }
+
+  statement {
+    sid       = "ManageAlertTopic"
+    actions   = ["sns:CreateTopic", "sns:DeleteTopic", "sns:GetTopicAttributes", "sns:SetTopicAttributes", "sns:ListTagsForResource", "sns:TagResource", "sns:Subscribe", "sns:Unsubscribe", "sns:GetSubscriptionAttributes", "sns:ListSubscriptionsByTopic"]
+    resources = ["arn:aws:sns:${local.region}:${local.account_id}:${var.name_prefix}-alerts*"]
   }
 
   statement {
